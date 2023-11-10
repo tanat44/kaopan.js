@@ -9,12 +9,11 @@ export class Ui {
   }
 
   initControl() {
-    document.getElementById("zoomFitButton").addEventListener("click", () => {
-      this.engine.zoomFit();
-    });
-
-    document.getElementById("clearButton").addEventListener("click", () => {
-      this.engine.clear();
-    });
+    // document.getElementById("zoomFitButton").addEventListener("click", () => {
+    //   // this.engine.zoomFit();
+    // });
+    // document.getElementById("clearButton").addEventListener("click", () => {
+    //   // this.engine.clear();
+    // });
   }
 }

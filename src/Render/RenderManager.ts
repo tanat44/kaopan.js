@@ -1,7 +1,7 @@
 import { Mesh, Object3D } from "three";
 import { RenderObject, RenderType } from "../Data/types";
 import { Engine } from "../Engine/Engine";
-import { BoxRenderer } from "./BoxRenderer";
+import { BoxRender } from "./BoxRender";
 
 type ObjectReference = {
   type: RenderType;
@@ -12,12 +12,12 @@ export class RenderManager {
   engine: Engine;
   allObjects: Map<string, ObjectReference>;
 
-  boxRenderer: BoxRenderer;
+  boxRenderer: BoxRender;
 
   constructor(engine: Engine) {
     this.engine = engine;
     this.allObjects = new Map();
-    this.boxRenderer = new BoxRenderer(engine);
+    this.boxRenderer = new BoxRender(engine);
   }
 
   updateObject(objects: RenderObject[]) {

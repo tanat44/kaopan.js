@@ -5,14 +5,12 @@ import { DEG2RAD } from "three/src/math/MathUtils";
 
 export const RENDER_SCALE = 1;
 
-export abstract class RendererBase {
-  instancedMeshes: InstancedMesh[];
+export abstract class RenderBase {
   geometry: BufferGeometry;
   engine: Engine;
 
   constructor(engine: Engine) {
     this.engine = engine;
-    this.instancedMeshes = [];
   }
 
   create(object: RenderObject): Object3D {

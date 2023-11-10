@@ -1,14 +1,8 @@
-// @ts-ignore
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-
 import {
   AmbientLight,
-  BoxGeometry,
   Clock,
   Color,
   GridHelper,
-  MOUSE,
-  Mesh,
   PerspectiveCamera,
   Raycaster,
   Scene,
@@ -21,6 +15,8 @@ import { Assets } from "./Assets";
 import { MouseHandler } from "./MouseHandler";
 import { RenderObject, RenderType } from "../Data/types";
 import { RenderManager } from "../Render/RenderManager";
+import { InstancedRenderManager } from "../InstancedRender/InstacedRenderManager";
+import Stats from "three/examples/jsm/libs/stats.module";
 
 export type TickCallback = (dt: number) => void;
 
@@ -29,13 +25,14 @@ export class Engine {
   assets: Assets;
   mouseHandler: MouseHandler;
   renderManager: RenderManager;
+  instancedRenderManager: InstancedRenderManager;
 
   // Threejs
   scene: Scene;
   camera: PerspectiveCamera;
   raycaster: Raycaster;
   renderer: WebGLRenderer;
-  orbitControl: OrbitControls;
+  stats: Stats;
 
   // animation loop
   clock: Clock;
@@ -43,17 +40,21 @@ export class Engine {
 
   constructor(canvasId: string) {
     this.assets = new Assets(this);
-    this.renderManager = new RenderManager(this);
-
     this.raycaster = new Raycaster();
     this.setupScene(canvasId);
     this.setupLighting();
-    this.setupOrbitControl();
     this.tickCallbacks = [];
     this.mouseHandler = new MouseHandler(canvasId, this);
 
-    const objs = this.generateObjects();
-    this.renderManager.updateObject(objs);
+    // setup render engine
+    this.renderManager = new RenderManager(this);
+    this.instancedRenderManager = new InstancedRenderManager(this);
+
+    // render test objects
+    const num = 500000;
+    document.getElementById("info").innerHTML = `instanced mesh count: ${num}`;
+    const objs = this.generateObjects(num);
+    this.instancedRenderManager.updateObject(objs);
   }
 
   setupLighting() {
@@ -97,9 +98,15 @@ export class Engine {
     (grid.material as any).opacity = 0.25;
     (grid.material as any).transparent = true;
     this.scene.add(grid);
+
+    // statistic
+    this.stats = new Stats();
+    this.container.appendChild(this.stats.dom);
   }
 
   tick() {
+    if (this.stats) this.stats.update();
+
     const dt = this.clock.getDelta();
     this.tickCallbacks.map((fn) => fn(dt));
     this.render();
@@ -107,19 +114,6 @@ export class Engine {
 
   registerTickCallback(callback: TickCallback) {
     this.tickCallbacks.push(callback);
-  }
-
-  setupOrbitControl() {
-    this.orbitControl = new OrbitControls(
-      this.camera,
-      this.renderer.domElement
-    );
-    this.orbitControl.damping = 0.2;
-    this.orbitControl.mouseButtons = {
-      LEFT: MOUSE.ROTATE,
-      RIGHT: MOUSE.PAN,
-    };
-    this.orbitControl.addEventListener("change", () => this.render());
   }
 
   resize(width: number, height: number) {
@@ -133,21 +127,22 @@ export class Engine {
     this.renderer.render(this.scene, this.camera);
   }
 
-  generateObjects() {
+  generateObjects(number: number) {
     const objects: RenderObject[] = [];
-    for (let i = 0; i < 1000; ++i) {
+    const size = 80;
+    for (let i = 0; i < number; ++i) {
       objects.push({
         name: `hi${i}`,
         type: RenderType.Box,
         position: new Vector3(
+          Math.random() * 2000 - 1000,
           Math.random() * 1000,
-          Math.random() * 1000,
-          Math.random() * 1000
+          Math.random() * 2000 - 1000
         ),
         scale: new Vector3(
-          Math.random() * 100,
-          Math.random() * 100,
-          Math.random() * 100
+          Math.random() * size,
+          Math.random() * size,
+          Math.random() * size
         ),
         color: this.randomHexColor(),
       });
@@ -157,10 +152,7 @@ export class Engine {
 
   randomHexColor(): string {
     const value = Math.floor(Math.random() * 0xffffff);
-    return `#${value.toString(16)}`;
+    const hexString = String(value.toString(16)).padEnd(6, "F");
+    return `#${hexString}`;
   }
-
-  clear() {}
-  zoomFit() {}
-  destroy() {}
 }

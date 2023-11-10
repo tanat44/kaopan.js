@@ -1,9 +1,9 @@
-import { BoxGeometry, Euler, Mesh, MeshBasicMaterial } from "three";
+import { BoxGeometry, Euler, Mesh } from "three";
 import { Engine } from "../Engine/Engine";
-import { RendererBase } from "./RendererBase";
+import { RenderBase } from "./RenderBase";
 import { RenderObject } from "../Data/types";
 
-export class BoxRenderer extends RendererBase {
+export class BoxRender extends RenderBase {
   constructor(engine: Engine) {
     super(engine);
     this.geometry = new BoxGeometry(1, 1, 1);

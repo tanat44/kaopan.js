@@ -1,5 +1,6 @@
 import {
   InstancedMesh,
+  MOUSE,
   Matrix4,
   Object3D,
   Plane,
@@ -7,11 +8,14 @@ import {
   Vector3,
 } from "three";
 import { Engine } from "./Engine";
+// @ts-ignore
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 const LEFT_BUTTON = 0;
 
 export class MouseHandler {
   engine: Engine;
+  orbitControl: OrbitControls;
 
   clickPosition: Vector3;
   objectOriginalPosition: Vector3;
@@ -20,6 +24,7 @@ export class MouseHandler {
 
   constructor(canvasId: string, engine: Engine) {
     this.engine = engine;
+    this.setupOrbitControl();
 
     const container = document.getElementById(canvasId);
     container.addEventListener("mousedown", (e: MouseEvent) =>
@@ -96,5 +101,18 @@ export class MouseHandler {
   onMouseUp(e: MouseEvent) {
     this.draggingObject = null;
     this.draggingInstance = null;
+  }
+
+  setupOrbitControl() {
+    this.orbitControl = new OrbitControls(
+      this.engine.camera,
+      this.engine.renderer.domElement
+    );
+    this.orbitControl.damping = 0.2;
+    this.orbitControl.mouseButtons = {
+      MIDDLE: MOUSE.ROTATE,
+      RIGHT: MOUSE.PAN,
+    };
+    this.orbitControl.addEventListener("change", () => this.engine.render());
   }
 }

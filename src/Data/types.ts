@@ -9,6 +9,8 @@ export enum RenderType {
   Square,
   Circle,
   Polyline,
+  // etc
+  Unknown,
 }
 
 export type Animation = {
@@ -16,8 +18,10 @@ export type Animation = {
   acceleration: Vector3;
 };
 
+export type name = string;
+
 export type RenderObject = {
-  name: string;
+  name: name;
   type?: RenderType;
   position?: Vector3;
   rotation?: Vector3;
