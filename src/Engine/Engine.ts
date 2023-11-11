@@ -14,9 +14,8 @@ import {
 import { Assets } from "./Assets";
 import { MouseHandler } from "./MouseHandler";
 import { RenderObject, RenderType } from "../Data/types";
-import { RenderManager } from "../Render/RenderManager";
-import { InstancedRenderManager } from "../InstancedRender/InstacedRenderManager";
 import Stats from "three/examples/jsm/libs/stats.module";
+import { RenderManager } from "../Render/Renderer";
 
 export type TickCallback = (dt: number) => void;
 
@@ -24,14 +23,13 @@ export class Engine {
   container: HTMLElement;
   assets: Assets;
   mouseHandler: MouseHandler;
-  renderManager: RenderManager;
-  instancedRenderManager: InstancedRenderManager;
+  renderer: RenderManager;
 
   // Threejs
   scene: Scene;
   camera: PerspectiveCamera;
   raycaster: Raycaster;
-  renderer: WebGLRenderer;
+  webglRenderer: WebGLRenderer;
   stats: Stats;
 
   // animation loop
@@ -45,16 +43,14 @@ export class Engine {
     this.setupLighting();
     this.tickCallbacks = [];
     this.mouseHandler = new MouseHandler(canvasId, this);
-
-    // setup render engine
-    this.renderManager = new RenderManager(this);
-    this.instancedRenderManager = new InstancedRenderManager(this);
+    this.setupGrid();
+    this.renderer = new RenderManager(this);
 
     // render test objects
-    const num = 500000;
+    const num = 10000;
     document.getElementById("info").innerHTML = `instanced mesh count: ${num}`;
     const objs = this.generateObjects(num);
-    this.instancedRenderManager.updateObject(objs);
+    this.renderer.updateObject(objs);
   }
 
   setupLighting() {
@@ -82,26 +78,30 @@ export class Engine {
     this.camera.position.set(0, 3000, 2000);
     this.camera.lookAt(new Vector3(0, 0, 0));
     this.scene.add(this.camera);
-    this.renderer = new WebGLRenderer({ antialias: true });
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(width, height);
-    this.renderer.shadowMap.enabled = true;
+    this.webglRenderer = new WebGLRenderer({ antialias: true });
+    this.webglRenderer.setPixelRatio(window.devicePixelRatio);
+    this.webglRenderer.setSize(width, height);
+    this.webglRenderer.shadowMap.enabled = true;
     this.clock = new Clock();
-    this.renderer.setAnimationLoop(() => this.tick());
+    this.webglRenderer.setAnimationLoop(() => this.tick());
 
-    this.container.appendChild(this.renderer.domElement);
+    this.container.appendChild(this.webglRenderer.domElement);
     this.resize(width, height);
-
-    // draw grid helper
-    const grid = new GridHelper(2000, 100);
-    grid.position.y = 0;
-    (grid.material as any).opacity = 0.25;
-    (grid.material as any).transparent = true;
-    this.scene.add(grid);
 
     // statistic
     this.stats = new Stats();
     this.container.appendChild(this.stats.dom);
+  }
+
+  setupGrid() {
+    // draw grid helper
+    const grid = new GridHelper(2000, 100);
+    grid.name = "gridHelper";
+    grid.position.y = 0;
+    (grid.material as any).opacity = 0.25;
+    (grid.material as any).transparent = true;
+    this.scene.add(grid);
+    this.mouseHandler.ignoreObjects.add(grid.name);
   }
 
   tick() {
@@ -119,33 +119,59 @@ export class Engine {
   resize(width: number, height: number) {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(width, height);
+    this.webglRenderer.setSize(width, height);
     this.render();
   }
 
   render() {
-    this.renderer.render(this.scene, this.camera);
+    this.webglRenderer.render(this.scene, this.camera);
   }
 
   generateObjects(number: number) {
     const objects: RenderObject[] = [];
-    const size = 80;
     for (let i = 0; i < number; ++i) {
-      objects.push({
-        name: `hi${i}`,
+      const snowSize = 8;
+      const treeSize = 30;
+      const levelHeight = 30;
+      const snow = {
+        name: `snow${i}`,
+        type: RenderType.Sphere,
+        position: new Vector3(0, levelHeight * 0.5, 0),
+        scale: new Vector3(snowSize, snowSize, snowSize),
+        color: "#fffeed",
+      };
+      const level3: RenderObject = {
+        name: `level3_${i}`,
         type: RenderType.Box,
+        gpuInstancing: true,
+        position: new Vector3(0, levelHeight, 0),
+        scale: new Vector3(treeSize * 0.3, levelHeight, treeSize * 0.3),
+        color: "#78b522",
+        children: [snow],
+      };
+      const level2: RenderObject = {
+        name: `level2_${i}`,
+        type: RenderType.Box,
+        gpuInstancing: true,
+        position: new Vector3(0, levelHeight, 0),
+        scale: new Vector3(treeSize * 0.8, levelHeight, treeSize * 0.8),
+        color: "#399e23",
+        children: [level3],
+      };
+      const tree: RenderObject = {
+        name: `tree_${i}`,
+        type: RenderType.Box,
+        gpuInstancing: true,
         position: new Vector3(
           Math.random() * 2000 - 1000,
           Math.random() * 1000,
           Math.random() * 2000 - 1000
         ),
-        scale: new Vector3(
-          Math.random() * size,
-          Math.random() * size,
-          Math.random() * size
-        ),
-        color: this.randomHexColor(),
-      });
+        scale: new Vector3(treeSize, levelHeight, treeSize),
+        color: "#216631",
+        children: [level2],
+      };
+      objects.push(tree);
     }
     return objects;
   }

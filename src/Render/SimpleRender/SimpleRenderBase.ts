@@ -1,11 +1,11 @@
 import { BufferGeometry, Euler, InstancedMesh, Mesh, Object3D } from "three";
-import { Engine } from "../Engine/Engine";
-import { RenderObject } from "../Data/types";
+import { Engine } from "../../Engine/Engine";
+import { RenderObject } from "../../Data/types";
 import { DEG2RAD } from "three/src/math/MathUtils";
 
 export const RENDER_SCALE = 1;
 
-export abstract class RenderBase {
+export abstract class SimpleRenderBase {
   geometry: BufferGeometry;
   engine: Engine;
 

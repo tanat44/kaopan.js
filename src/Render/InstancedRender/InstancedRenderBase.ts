@@ -4,14 +4,16 @@ import {
   Euler,
   InstancedMesh,
   Matrix4,
+  Object3D,
   Vector3,
 } from "three";
-import { Engine } from "../Engine/Engine";
-import { RenderObject, name } from "../Data/types";
+import { Engine } from "../../Engine/Engine";
+import { RenderObject, RenderType, name } from "../../Data/types";
 import { DEG2RAD } from "three/src/math/MathUtils";
 
 export const RENDER_SCALE = 1;
 export const MAX_OBJECTS_IN_INSTANCE = 10000;
+export const FIRST_INDEX = 0;
 
 export type MeshIndex = {
   mesh: InstancedMesh;
@@ -24,28 +26,31 @@ export abstract class InstancedRenderBase {
   lastIndex: number;
   allObjects: Map<name, MeshIndex>;
   geometry: BufferGeometry;
+  type: RenderType;
 
   constructor(engine: Engine) {
     this.engine = engine;
     this.instancedMeshes = [];
-    this.lastIndex = -1;
+    this.lastIndex = FIRST_INDEX;
     this.allObjects = new Map();
     this.geometry = null;
+    this.type = RenderType.Unknown;
   }
 
-  render(object: RenderObject) {
+  render(object: RenderObject, parentMatrix: Matrix4) {
     let meshIndex = this.allObjects.get(object.name);
     if (!meshIndex) {
       meshIndex = this.createMesh();
+      this.allObjects.set(object.name, meshIndex);
     }
-    this.update(object, meshIndex);
+    this.update(object, meshIndex, parentMatrix);
   }
 
   createMesh(): MeshIndex {
     ++this.lastIndex;
     if (this.lastIndex >= MAX_OBJECTS_IN_INSTANCE) {
       this.addInstancedMesh();
-      this.lastIndex = -1;
+      this.lastIndex = FIRST_INDEX;
     }
     return {
       mesh: this.instancedMeshes[this.instancedMeshes.length - 1],
@@ -65,11 +70,13 @@ export abstract class InstancedRenderBase {
     this.applyScale(object, matrix);
     meshIndex.mesh.setMatrixAt(meshIndex.index, matrix);
     meshIndex.mesh.instanceMatrix.needsUpdate = true;
+    this.allObjects.delete(name);
   }
 
-  update(object: RenderObject, meshIndex: MeshIndex) {
+  update(object: RenderObject, meshIndex: MeshIndex, parentMatrix: Matrix4) {
     // transformation
     const matrix = new Matrix4();
+    matrix.copy(parentMatrix);
     this.applyPosition(object, matrix);
     this.applyRotation(object, matrix);
     this.applyScale(object, matrix);
@@ -122,5 +129,27 @@ export abstract class InstancedRenderBase {
     );
     this.instancedMeshes.push(mesh);
     this.engine.scene.add(mesh);
+  }
+
+  getMatrix(name: name) {
+    const meshIndex = this.allObjects.get(name);
+    const matrix = new Matrix4();
+    if (!meshIndex) return matrix;
+
+    meshIndex.mesh.getMatrixAt(meshIndex.index, matrix);
+    return matrix;
+  }
+
+  hasObject(object: Object3D): boolean {
+    return !!this.instancedMeshes.find((mesh) => mesh === object);
+  }
+
+  getObjectName(object: Object3D, instanceId: number): name {
+    for (let [key, value] of this.allObjects) {
+      const meshIndex = value as MeshIndex;
+      if (meshIndex.mesh === object && meshIndex.index === instanceId)
+        return key;
+    }
+    return null;
   }
 }

@@ -23,6 +23,7 @@ export type name = string;
 export type RenderObject = {
   name: name;
   type?: RenderType;
+  gpuInstancing?: boolean;
   position?: Vector3;
   rotation?: Vector3;
   scale?: Vector3;

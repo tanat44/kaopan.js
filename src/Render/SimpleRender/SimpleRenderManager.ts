@@ -1,23 +1,24 @@
-import { Mesh, Object3D } from "three";
-import { RenderObject, RenderType } from "../Data/types";
-import { Engine } from "../Engine/Engine";
-import { BoxRender } from "./BoxRender";
+import { Object3D, Object3DEventMap, Vector3 } from "three";
+import { RenderObject, RenderType, name } from "../../Data/types";
+import { Engine } from "../../Engine/Engine";
+import { SimpleBoxRender } from "./SimpleBoxRender";
+import { IRenderManager } from "../IRenderManager";
 
 type ObjectReference = {
   type: RenderType;
   mesh: Object3D;
 };
 
-export class RenderManager {
+export class SimpleRenderManager implements IRenderManager {
   engine: Engine;
-  allObjects: Map<string, ObjectReference>;
+  allObjects: Map<name, ObjectReference>;
 
-  boxRenderer: BoxRender;
+  boxRenderer: SimpleBoxRender;
 
   constructor(engine: Engine) {
     this.engine = engine;
     this.allObjects = new Map();
-    this.boxRenderer = new BoxRender(engine);
+    this.boxRenderer = new SimpleBoxRender(engine);
   }
 
   updateObject(objects: RenderObject[]) {
@@ -52,5 +53,28 @@ export class RenderManager {
         this.engine.scene.remove(ref.mesh);
       }
     }
+  }
+
+  updatePosition(name: name, newPosition: Vector3) {
+    const mesh = this.allObjects.get(name);
+    if (!mesh) return;
+    mesh.mesh.position.copy(newPosition);
+  }
+
+  hasObject(name: string): boolean {
+    return this.allObjects.has(name);
+  }
+
+  findObjectName(object: Object3D, instanceId: number): string {
+    return object.name;
+  }
+
+  getGlobalPosition(name: string): Vector3 {
+    const objectRef = this.allObjects.get(name);
+    if (!objectRef) return null;
+
+    const position = new Vector3();
+    objectRef.mesh.getWorldPosition(position);
+    return position;
   }
 }

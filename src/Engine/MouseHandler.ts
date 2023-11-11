@@ -1,30 +1,24 @@
-import {
-  InstancedMesh,
-  MOUSE,
-  Matrix4,
-  Object3D,
-  Plane,
-  Vector2,
-  Vector3,
-} from "three";
+import { MOUSE, Object3D, Plane, Vector2, Vector3 } from "three";
 import { Engine } from "./Engine";
 // @ts-ignore
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { name } from "../Data/types";
 
 const LEFT_BUTTON = 0;
 
 export class MouseHandler {
   engine: Engine;
   orbitControl: OrbitControls;
+  ignoreObjects: Set<name>;
 
   clickPosition: Vector3;
   objectOriginalPosition: Vector3;
-  draggingObject: Object3D;
-  draggingInstance: number;
+  draggingObjectName: name;
 
   constructor(canvasId: string, engine: Engine) {
     this.engine = engine;
     this.setupOrbitControl();
+    this.ignoreObjects = new Set();
 
     const container = document.getElementById(canvasId);
     container.addEventListener("mousedown", (e: MouseEvent) =>
@@ -34,7 +28,6 @@ export class MouseHandler {
       this.onMouseMove(e)
     );
     container.addEventListener("mouseup", (e: MouseEvent) => this.onMouseUp(e));
-    this.draggingInstance = null;
     this.objectOriginalPosition = new Vector3();
     this.clickPosition = new Vector3();
   }
@@ -46,44 +39,31 @@ export class MouseHandler {
     pointer.y = -(e.clientY / this.engine.container.offsetHeight) * 2 + 1;
     this.engine.raycaster.setFromCamera(pointer, this.engine.camera);
 
-    const intersection = this.engine.raycaster.intersectObjects(
+    let intersections = this.engine.raycaster.intersectObjects(
       this.engine.scene.children
     );
-    if (intersection.length == 0) return;
+    intersections = intersections.filter(
+      (intersection) => !this.ignoreObjects.has(intersection.object.name)
+    );
+    if (intersections.length == 0) return;
+    const object = intersections[0].object;
+    const instanceId = intersections[0].instanceId;
 
-    // drag object
-    this.draggingObject = intersection[0].object;
-    if (!this.draggingObject) return;
-    this.objectOriginalPosition.copy(this.draggingObject.position);
-
-    // draginstace of object
-    this.draggingInstance = intersection[0].instanceId;
-    if (this.draggingInstance) {
-      const instanceMesh = this.draggingObject as InstancedMesh;
-      const matrix = new Matrix4();
-      instanceMesh.getMatrixAt(this.draggingInstance, matrix);
-      this.objectOriginalPosition.setFromMatrixPosition(matrix);
-    }
+    const objectName = this.engine.renderer.findObjectName(object, instanceId);
+    if (!objectName) return;
+    this.draggingObjectName = objectName;
+    this.objectOriginalPosition = this.engine.renderer.getGlobalPosition(
+      this.draggingObjectName
+    );
     this.clickPosition = this.findGroundPlaneIntersection(e);
+    console.log("clicked:", this.draggingObjectName);
   }
 
   onMouseMove(e: MouseEvent) {
-    if (!this.draggingObject) return;
+    if (!this.draggingObjectName) return;
     const x = this.findGroundPlaneIntersection(e);
     x.sub(this.clickPosition).add(this.objectOriginalPosition);
-
-    if (!this.draggingInstance) {
-      // move normal object 3d
-      this.draggingObject.position.copy(x);
-    } else {
-      // move instance instanceMesh
-      const instanceMesh = this.draggingObject as InstancedMesh;
-      const matrix = new Matrix4();
-      instanceMesh.getMatrixAt(this.draggingInstance, matrix);
-      matrix.setPosition(x);
-      instanceMesh.setMatrixAt(this.draggingInstance, matrix);
-      instanceMesh.instanceMatrix.needsUpdate = true;
-    }
+    this.engine.renderer.updatePosition(this.draggingObjectName, x);
     this.engine.render();
   }
 
@@ -99,14 +79,13 @@ export class MouseHandler {
   }
 
   onMouseUp(e: MouseEvent) {
-    this.draggingObject = null;
-    this.draggingInstance = null;
+    this.draggingObjectName = null;
   }
 
   setupOrbitControl() {
     this.orbitControl = new OrbitControls(
       this.engine.camera,
-      this.engine.renderer.domElement
+      this.engine.webglRenderer.domElement
     );
     this.orbitControl.damping = 0.2;
     this.orbitControl.mouseButtons = {
