@@ -1,4 +1,10 @@
-import { BufferGeometry, InstancedMesh, Object3D, Vector3 } from "three";
+import {
+  BufferGeometry,
+  InstancedMesh,
+  Matrix4,
+  Object3D,
+  Vector3,
+} from "three";
 import { RenderObject, name } from "../Data/types";
 import { Engine } from "../Engine/Engine";
 import { IRenderManager } from "./IRenderManager";
@@ -56,5 +62,12 @@ export class RenderManager {
     if ((object as InstancedMesh)?.isInstancedMesh)
       return this.instancedRenderManager.findObjectName(object, instanceId);
     return object.name;
+  }
+
+  getMatrix(name: name): Matrix4 {
+    const manager = this.findRenderManager(name);
+    if (!manager) return null;
+
+    return manager.getMatrix(name);
   }
 }

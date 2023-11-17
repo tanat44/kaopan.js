@@ -6,7 +6,7 @@ export enum RenderType {
   Sphere,
   Gltf,
   // 2D
-  Square,
+  Rectangle,
   Circle,
   Polyline,
   // etc

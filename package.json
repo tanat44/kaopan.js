@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/lodash": "^4.14.201",
     "css-loader": "^6.8.1",
     "style-loader": "^3.3.3",
     "ts-loader": "^9.4.4",
@@ -21,6 +22,7 @@
   "dependencies": {
     "@types/three": "^0.158.1",
     "html-webpack-plugin": "^5.5.0",
+    "lodash": "^4.17.21",
     "three": "^0.158.0"
   }
 }

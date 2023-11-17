@@ -15,7 +15,7 @@ export const RENDER_SCALE = 1;
 export const MAX_OBJECTS_IN_INSTANCE = 10000;
 export const FIRST_INDEX = 0;
 
-export type MeshIndex = {
+export type InstanceRef = {
   mesh: InstancedMesh;
   index: number;
 };
@@ -24,7 +24,7 @@ export abstract class InstancedRenderBase {
   engine: Engine;
   instancedMeshes: InstancedMesh[];
   lastIndex: number;
-  allObjects: Map<name, MeshIndex>;
+  allObjects: Map<name, InstanceRef>;
   geometry: BufferGeometry;
   type: RenderType;
 
@@ -38,15 +38,15 @@ export abstract class InstancedRenderBase {
   }
 
   render(object: RenderObject, parentMatrix: Matrix4) {
-    let meshIndex = this.allObjects.get(object.name);
-    if (!meshIndex) {
-      meshIndex = this.createMesh();
-      this.allObjects.set(object.name, meshIndex);
+    let instanceRef = this.allObjects.get(object.name);
+    if (!instanceRef) {
+      instanceRef = this.createMesh();
+      this.allObjects.set(object.name, instanceRef);
     }
-    this.update(object, meshIndex, parentMatrix);
+    this.update(object, instanceRef, parentMatrix);
   }
 
-  createMesh(): MeshIndex {
+  createMesh(): InstanceRef {
     ++this.lastIndex;
     if (this.lastIndex >= MAX_OBJECTS_IN_INSTANCE) {
       this.addInstancedMesh();
@@ -59,8 +59,8 @@ export abstract class InstancedRenderBase {
   }
 
   remove(name: name) {
-    const meshIndex = this.allObjects.get(name);
-    if (!meshIndex) return;
+    const instanceRef = this.allObjects.get(name);
+    if (!instanceRef) return;
 
     const object: RenderObject = {
       name,
@@ -68,23 +68,27 @@ export abstract class InstancedRenderBase {
     };
     const matrix = new Matrix4();
     this.applyScale(object, matrix);
-    meshIndex.mesh.setMatrixAt(meshIndex.index, matrix);
-    meshIndex.mesh.instanceMatrix.needsUpdate = true;
+    instanceRef.mesh.setMatrixAt(instanceRef.index, matrix);
+    instanceRef.mesh.instanceMatrix.needsUpdate = true;
     this.allObjects.delete(name);
   }
 
-  update(object: RenderObject, meshIndex: MeshIndex, parentMatrix: Matrix4) {
+  update(
+    object: RenderObject,
+    instanceRef: InstanceRef,
+    parentMatrix: Matrix4
+  ) {
     // transformation
     const matrix = new Matrix4();
     matrix.copy(parentMatrix);
     this.applyPosition(object, matrix);
     this.applyRotation(object, matrix);
     this.applyScale(object, matrix);
-    meshIndex.mesh.setMatrixAt(meshIndex.index, matrix);
-    meshIndex.mesh.instanceMatrix.needsUpdate = true;
+    instanceRef.mesh.setMatrixAt(instanceRef.index, matrix);
+    instanceRef.mesh.instanceMatrix.needsUpdate = true;
 
     // color
-    this.applyColor(object, meshIndex);
+    this.applyColor(object, instanceRef);
   }
 
   applyPosition(object: RenderObject, matrix: Matrix4) {
@@ -115,16 +119,16 @@ export abstract class InstancedRenderBase {
     matrix.multiply(m);
   }
 
-  applyColor(object: RenderObject, meshIndex: MeshIndex) {
+  applyColor(object: RenderObject, instanceRef: InstanceRef) {
     if (!object.color) return;
-    meshIndex.mesh.setColorAt(meshIndex.index, new Color(object.color));
-    meshIndex.mesh.instanceColor.needsUpdate = true;
+    instanceRef.mesh.setColorAt(instanceRef.index, new Color(object.color));
+    instanceRef.mesh.instanceColor.needsUpdate = true;
   }
 
   protected addInstancedMesh() {
     const mesh = new InstancedMesh(
       this.geometry,
-      this.engine.assets.meshBasicMaterialLibrary.getMaterial(),
+      this.engine.materials.meshBasicMaterialLibrary.getMaterial(),
       MAX_OBJECTS_IN_INSTANCE
     );
     this.instancedMeshes.push(mesh);
@@ -132,11 +136,11 @@ export abstract class InstancedRenderBase {
   }
 
   getMatrix(name: name) {
-    const meshIndex = this.allObjects.get(name);
+    const instanceRef = this.allObjects.get(name);
     const matrix = new Matrix4();
-    if (!meshIndex) return matrix;
+    if (!instanceRef) return matrix;
 
-    meshIndex.mesh.getMatrixAt(meshIndex.index, matrix);
+    instanceRef.mesh.getMatrixAt(instanceRef.index, matrix);
     return matrix;
   }
 
@@ -146,8 +150,8 @@ export abstract class InstancedRenderBase {
 
   getObjectName(object: Object3D, instanceId: number): name {
     for (let [key, value] of this.allObjects) {
-      const meshIndex = value as MeshIndex;
-      if (meshIndex.mesh === object && meshIndex.index === instanceId)
+      const instanceRef = value as InstanceRef;
+      if (instanceRef.mesh === object && instanceRef.index === instanceId)
         return key;
     }
     return null;

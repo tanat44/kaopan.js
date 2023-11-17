@@ -5,6 +5,7 @@ import { InstancedBoxRender } from "./InstancedBoxRender";
 import { InstancedRenderBase } from "./InstancedRenderBase";
 import { InstancedSphereRenderer } from "./InstancedSphereRender";
 import { IRenderManager } from "../IRenderManager";
+import { InstancedRectangleRender } from "./InstancedRectangleRender";
 
 type InstancedObject = {
   type: RenderType;
@@ -24,6 +25,7 @@ export class InstancedRenderManager implements IRenderManager {
     this.instancedRenders = [
       new InstancedBoxRender(engine),
       new InstancedSphereRenderer(engine),
+      new InstancedRectangleRender(engine),
     ];
 
     // data
@@ -105,10 +107,10 @@ export class InstancedRenderManager implements IRenderManager {
 
     // update mesh
     const matrix = renderer.getMatrix(name);
-    const meshIndex = renderer.allObjects.get(name);
+    const instanceRef = renderer.allObjects.get(name);
     matrix.setPosition(newPosition);
-    meshIndex.mesh.setMatrixAt(meshIndex.index, matrix);
-    meshIndex.mesh.instanceMatrix.needsUpdate = true;
+    instanceRef.mesh.setMatrixAt(instanceRef.index, matrix);
+    instanceRef.mesh.instanceMatrix.needsUpdate = true;
 
     // update children
     for (const child of instancedObject.childrenName) {
@@ -131,13 +133,18 @@ export class InstancedRenderManager implements IRenderManager {
   }
 
   getGlobalPosition(name: name): Vector3 {
+    const matrix = this.getMatrix(name);
+    const pos = new Vector3();
+    pos.setFromMatrixPosition(matrix);
+    return pos;
+  }
+
+  getMatrix(name: string): Matrix4 {
     const instancedObject = this.instancedObjects.get(name);
     if (!instancedObject) return null;
 
     const render = this.getInstanceRender(instancedObject.type);
     const matrix = render.getMatrix(name);
-    const pos = new Vector3();
-    pos.setFromMatrixPosition(matrix);
-    return pos;
+    return matrix;
   }
 }

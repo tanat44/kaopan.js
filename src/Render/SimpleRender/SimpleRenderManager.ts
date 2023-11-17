@@ -1,4 +1,4 @@
-import { Object3D, Object3DEventMap, Vector3 } from "three";
+import { Matrix4, Object3D, Object3DEventMap, Vector3 } from "three";
 import { RenderObject, RenderType, name } from "../../Data/types";
 import { Engine } from "../../Engine/Engine";
 import { SimpleBoxRender } from "./SimpleBoxRender";
@@ -76,5 +76,11 @@ export class SimpleRenderManager implements IRenderManager {
     const position = new Vector3();
     objectRef.mesh.getWorldPosition(position);
     return position;
+  }
+
+  getMatrix(name: string): Matrix4 {
+    const objectRef = this.allObjects.get(name);
+    if (!objectRef) return null;
+    return objectRef.mesh.matrix;
   }
 }

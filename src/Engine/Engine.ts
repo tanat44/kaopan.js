@@ -3,7 +3,6 @@ import {
   Clock,
   Color,
   GridHelper,
-  PerspectiveCamera,
   Raycaster,
   Scene,
   SpotLight,
@@ -16,40 +15,49 @@ import { MouseHandler } from "./MouseHandler";
 import { RenderObject, RenderType } from "../Data/types";
 import Stats from "three/examples/jsm/libs/stats.module";
 import { RenderManager } from "../Render/Renderer";
-
-export type TickCallback = (dt: number) => void;
+import { CameraManager } from "../Camera/CameraManager";
+import _ from "lodash";
+import { CameraType } from "../Camera/types";
+import { IAnimator } from "../Animation/IAnimator";
+import { MaterialManager } from "../Material/MaterialManager";
+import { Transformer } from "../Tool/Transformer";
 
 export class Engine {
   container: HTMLElement;
   assets: Assets;
+  materials: MaterialManager;
   mouseHandler: MouseHandler;
   renderer: RenderManager;
+  transformer: Transformer;
 
   // Threejs
   scene: Scene;
-  camera: PerspectiveCamera;
   raycaster: Raycaster;
   webglRenderer: WebGLRenderer;
   stats: Stats;
+  cameraManager: CameraManager;
 
   // animation loop
   clock: Clock;
-  tickCallbacks: TickCallback[];
+  animators: Map<string, IAnimator>;
 
   constructor(canvasId: string) {
+    this.animators = new Map();
     this.assets = new Assets(this);
     this.raycaster = new Raycaster();
     this.setupScene(canvasId);
+    this.cameraManager = new CameraManager(this, CameraType.Perspective);
     this.setupLighting();
-    this.tickCallbacks = [];
     this.mouseHandler = new MouseHandler(canvasId, this);
     this.setupGrid();
+    this.materials = new MaterialManager();
     this.renderer = new RenderManager(this);
+    this.transformer = new Transformer(this);
 
     // render test objects
-    const num = 10000;
+    const num = 1000;
     document.getElementById("info").innerHTML = `instanced mesh count: ${num}`;
-    const objs = this.generateObjects(num);
+    const objs = this.generate2DObjects(num);
     this.renderer.updateObject(objs);
   }
 
@@ -68,29 +76,37 @@ export class Engine {
   }
 
   setupScene(canvasId: string) {
+    this.container = document.getElementById(canvasId);
     this.scene = new Scene();
     this.scene.background = new Color(0xf0f0f0);
 
-    this.container = document.getElementById(canvasId);
-    var width = this.container.offsetWidth;
-    var height = this.container.offsetHeight;
-    this.camera = new PerspectiveCamera(70, width / height, 0.1, 999999);
-    this.camera.position.set(0, 3000, 2000);
-    this.camera.lookAt(new Vector3(0, 0, 0));
-    this.scene.add(this.camera);
+    // setup webgl container
     this.webglRenderer = new WebGLRenderer({ antialias: true });
     this.webglRenderer.setPixelRatio(window.devicePixelRatio);
-    this.webglRenderer.setSize(width, height);
+    this.webglRenderer.setSize(this.width, this.height);
     this.webglRenderer.shadowMap.enabled = true;
     this.clock = new Clock();
     this.webglRenderer.setAnimationLoop(() => this.tick());
-
     this.container.appendChild(this.webglRenderer.domElement);
-    this.resize(width, height);
 
-    // statistic
+    // add statistic
     this.stats = new Stats();
     this.container.appendChild(this.stats.dom);
+
+    window.addEventListener(
+      "resize",
+      _.debounce(() => {
+        this.onResize();
+      }, 500)
+    );
+  }
+
+  get width() {
+    return this.container.offsetWidth;
+  }
+
+  get height() {
+    return this.container.offsetHeight;
   }
 
   setupGrid() {
@@ -107,24 +123,42 @@ export class Engine {
   tick() {
     if (this.stats) this.stats.update();
 
-    const dt = this.clock.getDelta();
-    this.tickCallbacks.map((fn) => fn(dt));
+    if (this.animators) {
+      const dt = this.clock.getDelta();
+      this.animators.forEach((animator, key) => {
+        animator.tick(dt);
+      });
+    }
     this.render();
   }
 
-  registerTickCallback(callback: TickCallback) {
-    this.tickCallbacks.push(callback);
+  addAnimator(objectName: string, animator: IAnimator) {
+    this.animators.set(objectName, animator);
   }
 
-  resize(width: number, height: number) {
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
+  removeAnimator(objectName: string) {
+    const animator = this.animators.get(objectName);
+    if (!animator) return;
+
+    this.animators.delete(objectName);
+  }
+
+  onResize() {
+    if (!this.cameraManager) {
+      return;
+    }
+    const width = this.width;
+    const height = this.height;
+    this.cameraManager.onResize(width, height);
     this.webglRenderer.setSize(width, height);
     this.render();
   }
 
   render() {
-    this.webglRenderer.render(this.scene, this.camera);
+    if (!this.cameraManager) {
+      return;
+    }
+    this.webglRenderer.render(this.scene, this.cameraManager.currentCamera);
   }
 
   generateObjects(number: number) {
@@ -172,6 +206,26 @@ export class Engine {
         children: [level2],
       };
       objects.push(tree);
+    }
+    return objects;
+  }
+
+  generate2DObjects(number: number) {
+    const objects: RenderObject[] = [];
+    for (let i = 0; i < number; ++i) {
+      const rect: RenderObject = {
+        name: `rect_${i}`,
+        type: RenderType.Rectangle,
+        gpuInstancing: true,
+        position: new Vector3(
+          Math.random() * 2000 - 1000,
+          0,
+          Math.random() * 2000 - 1000
+        ),
+        scale: new Vector3(30, 1, 30),
+        color: "#78b522",
+      };
+      objects.push(rect);
     }
     return objects;
   }

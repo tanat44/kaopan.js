@@ -1,3 +1,4 @@
+import { CameraType } from "./Camera/types";
 import { Engine } from "./Engine/Engine";
 
 export class Ui {
@@ -9,11 +10,14 @@ export class Ui {
   }
 
   initControl() {
-    // document.getElementById("zoomFitButton").addEventListener("click", () => {
-    //   // this.engine.zoomFit();
-    // });
-    // document.getElementById("clearButton").addEventListener("click", () => {
-    //   // this.engine.clear();
-    // });
+    document.getElementById("orthographic").addEventListener("click", () => {
+      this.engine.cameraManager.changeCamera(CameraType.Orthographic);
+    });
+    document.getElementById("perspective").addEventListener("click", () => {
+      this.engine.cameraManager.changeCamera(CameraType.Perspective);
+    });
+    document.getElementById("topview").addEventListener("click", () => {
+      this.engine.cameraManager.changeCamera(CameraType.TopView);
+    });
   }
 }

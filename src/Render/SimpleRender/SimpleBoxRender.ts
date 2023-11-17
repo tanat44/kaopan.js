@@ -10,7 +10,7 @@ export class SimpleBoxRender extends SimpleRenderBase {
   }
 
   create(object: RenderObject): Mesh {
-    const material = this.engine.assets.meshBasicMaterialLibrary.getMaterial(
+    const material = this.engine.materials.meshBasicMaterialLibrary.getMaterial(
       object.color
     );
     const mesh = new Mesh(this.geometry, material);

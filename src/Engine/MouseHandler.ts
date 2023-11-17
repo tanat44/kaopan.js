@@ -1,4 +1,4 @@
-import { MOUSE, Object3D, Plane, Vector2, Vector3 } from "three";
+import { Camera, MOUSE, Object3D, Plane, Vector2, Vector3 } from "three";
 import { Engine } from "./Engine";
 // @ts-ignore
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -37,7 +37,10 @@ export class MouseHandler {
     const pointer = new Vector2();
     pointer.x = (e.clientX / this.engine.container.offsetWidth) * 2 - 1;
     pointer.y = -(e.clientY / this.engine.container.offsetHeight) * 2 + 1;
-    this.engine.raycaster.setFromCamera(pointer, this.engine.camera);
+    this.engine.raycaster.setFromCamera(
+      pointer,
+      this.engine.cameraManager.currentCamera
+    );
 
     let intersections = this.engine.raycaster.intersectObjects(
       this.engine.scene.children
@@ -57,6 +60,11 @@ export class MouseHandler {
     );
     this.clickPosition = this.findGroundPlaneIntersection(e);
     console.log("clicked:", this.draggingObjectName);
+
+    this.engine.transformer.setTransformObject(
+      objectName,
+      this.engine.renderer.getMatrix(objectName)
+    );
   }
 
   onMouseMove(e: MouseEvent) {
@@ -72,7 +80,10 @@ export class MouseHandler {
     const pointer = new Vector2();
     pointer.x = (e.clientX / this.engine.container.offsetWidth) * 2 - 1;
     pointer.y = -(e.clientY / this.engine.container.offsetHeight) * 2 + 1;
-    this.engine.raycaster.setFromCamera(pointer, this.engine.camera);
+    this.engine.raycaster.setFromCamera(
+      pointer,
+      this.engine.cameraManager.currentCamera
+    );
     var intersect = new Vector3();
     this.engine.raycaster.ray.intersectPlane(groundPlane, intersect);
     return intersect;
@@ -84,7 +95,7 @@ export class MouseHandler {
 
   setupOrbitControl() {
     this.orbitControl = new OrbitControls(
-      this.engine.camera,
+      this.engine.cameraManager.currentCamera,
       this.engine.webglRenderer.domElement
     );
     this.orbitControl.damping = 0.2;
@@ -93,5 +104,10 @@ export class MouseHandler {
       RIGHT: MOUSE.PAN,
     };
     this.orbitControl.addEventListener("change", () => this.engine.render());
+  }
+
+  onCameraChange(newCamera: Camera) {
+    console.log("a");
+    this.orbitControl.camera = newCamera;
   }
 }
