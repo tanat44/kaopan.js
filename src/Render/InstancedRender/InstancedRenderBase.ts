@@ -3,6 +3,7 @@ import {
   Color,
   Euler,
   InstancedMesh,
+  Material,
   Matrix4,
   Object3D,
   Vector3,
@@ -26,6 +27,7 @@ export abstract class InstancedRenderBase {
   lastIndex: number;
   allObjects: Map<name, InstanceRef>;
   geometry: BufferGeometry;
+  material: Material;
   type: RenderType;
 
   constructor(engine: Engine) {
@@ -34,6 +36,8 @@ export abstract class InstancedRenderBase {
     this.lastIndex = FIRST_INDEX;
     this.allObjects = new Map();
     this.geometry = null;
+    this.material =
+      this.engine.materials.meshBasicMaterialLibrary.getMaterial();
     this.type = RenderType.Unknown;
   }
 
@@ -46,7 +50,7 @@ export abstract class InstancedRenderBase {
     this.update(object, instanceRef, parentMatrix);
   }
 
-  createMesh(): InstanceRef {
+  private createMesh(): InstanceRef {
     ++this.lastIndex;
     if (this.lastIndex >= MAX_OBJECTS_IN_INSTANCE) {
       this.addInstancedMesh();
@@ -128,7 +132,7 @@ export abstract class InstancedRenderBase {
   protected addInstancedMesh() {
     const mesh = new InstancedMesh(
       this.geometry,
-      this.engine.materials.meshBasicMaterialLibrary.getMaterial(),
+      this.material,
       MAX_OBJECTS_IN_INSTANCE
     );
     this.instancedMeshes.push(mesh);

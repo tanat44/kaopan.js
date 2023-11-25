@@ -11,6 +11,9 @@ export enum RenderType {
   Polyline,
   // etc
   Unknown,
+
+  // Internal
+  Stroke,
 }
 
 export type Animation = {

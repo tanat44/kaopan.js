@@ -6,6 +6,7 @@ import { InstancedBoxRender } from "./InstancedBoxRender";
 import { InstancedRectangleRender } from "./InstancedRectangleRender";
 import { InstancedRenderBase } from "./InstancedRenderBase";
 import { InstancedSphereRenderer } from "./InstancedSphereRender";
+import { InstancedStrokeRender } from "./InstancedStrokeRender";
 
 type InstancedObject = {
   type: RenderType;
@@ -15,18 +16,27 @@ type InstancedObject = {
 };
 export class InstancedRenderManager implements IRenderManager {
   engine: Engine;
-  instancedRenders: InstancedRenderBase[];
+  instancedRenders: Map<RenderType, InstancedRenderBase>;
 
   // data
   instancedObjects: Map<name, InstancedObject>;
 
   constructor(engine: Engine) {
     this.engine = engine;
-    this.instancedRenders = [
-      new InstancedBoxRender(engine),
-      new InstancedSphereRenderer(engine),
-      new InstancedRectangleRender(engine),
-    ];
+    this.instancedRenders = new Map();
+    this.instancedRenders.set(RenderType.Box, new InstancedBoxRender(engine));
+    this.instancedRenders.set(
+      RenderType.Sphere,
+      new InstancedSphereRenderer(engine)
+    );
+    this.instancedRenders.set(
+      RenderType.Rectangle,
+      new InstancedRectangleRender(engine)
+    );
+    this.instancedRenders.set(
+      RenderType.Stroke,
+      new InstancedStrokeRender(engine)
+    );
 
     // data
     this.instancedObjects = new Map();
@@ -74,8 +84,7 @@ export class InstancedRenderManager implements IRenderManager {
   }
 
   getInstanceRender(type: RenderType): InstancedRenderBase {
-    const render = this.instancedRenders.find((render) => render.type === type);
-    return render;
+    return this.instancedRenders.get(type);
   }
 
   getParentMatrix(name: name, matrix: Matrix4) {
@@ -120,9 +129,13 @@ export class InstancedRenderManager implements IRenderManager {
   }
 
   findObjectName(object: Object3D, instanceId: number): name {
-    const render = this.instancedRenders.find((render) =>
-      render.hasObject(object)
-    );
+    let render: InstancedRenderBase = null;
+    for (let [key, r] of this.instancedRenders.entries()) {
+      if (r.hasObject(object)) {
+        render = r;
+        break;
+      }
+    }
     if (!render) return null;
     return render.getObjectName(object, instanceId);
   }

@@ -5,6 +5,7 @@ import { MouseRay } from "../MouseRay";
 import { Drag } from "./Drag";
 import { Hover } from "./Hover";
 import { SelectRectangle } from "./SelectRectangle";
+import { Selection } from "./Selection";
 
 const LEFT_BUTTON = 1;
 
@@ -20,6 +21,7 @@ export class Select extends InteractionHandler {
   drag: Drag;
   hover: Hover;
   selectRectangle: SelectRectangle;
+  selection: Selection;
 
   constructor(engine: Engine) {
     super(engine);
@@ -28,6 +30,7 @@ export class Select extends InteractionHandler {
     this.drag = new Drag(engine);
     this.hover = new Hover(engine);
     this.selectRectangle = new SelectRectangle(engine);
+    this.selection = new Selection(engine);
   }
 
   onMouseDown(e: MouseEvent) {
@@ -37,7 +40,8 @@ export class Select extends InteractionHandler {
     if (intersection.count) {
       this.drag.onMouseDown(e);
     } else {
-      // this.selectRectangle.onMouseDown(e);
+      this.selectRectangle.onMouseDown(e);
+      this.selection.deselect();
     }
   }
 
@@ -46,15 +50,19 @@ export class Select extends InteractionHandler {
 
     if (e.buttons === LEFT_BUTTON) {
       if (this.drag.dragging) this.drag.onMouseMove(e);
-      // else this.selectRectangle.onMouseMove(e);
+      else this.selectRectangle.onMouseMove(e);
     }
   }
 
   onMouseUp(e: MouseEvent) {
-    if (e.buttons !== LEFT_BUTTON) this.hover.cleanup();
+    if (this.drag.dragging) this.drag.onMouseUp(e);
     else {
-      if (this.drag.dragging) this.drag.onMouseUp(e);
-      // else this.selectRectangle.cleanup(e);
+      this.selectRectangle.onMouseUp(e);
+      const names = [];
+      for (let i = 0; i < 100; ++i) {
+        names.push(`tree_${Math.round(Math.random() * 1000)}`);
+      }
+      this.selection.select(names);
     }
   }
 }

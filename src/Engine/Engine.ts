@@ -9,15 +9,12 @@ import { RenderObject, RenderType } from "../Data/types";
 import { Interaction } from "../Interaction/Interaction";
 import { MaterialManager } from "../Material/MaterialManager";
 import { RenderManager } from "../Render/Renderer";
-import { createTestCustomShaderObject } from "../Sandbox/TestCustomShader";
 import { Transformer } from "../Tool/Transformer";
-import { Assets } from "./Assets";
 import { SceneManager } from "./SceneManager";
 
 export class Engine {
   element: HTMLElement;
   sceneManager: SceneManager;
-  assets: Assets;
   materials: MaterialManager;
   interaction: Interaction;
   renderer: RenderManager;
@@ -36,7 +33,6 @@ export class Engine {
     this.element = document.getElementById(canvasId);
     this.sceneManager = new SceneManager(this);
     this.setupCanvas();
-    this.assets = new Assets(this);
     this.cameraManager = new CameraManager(this, CameraType.Perspective);
     this.interaction = new Interaction(this);
     this.materials = new MaterialManager();
@@ -47,23 +43,13 @@ export class Engine {
     // // render test objects
     const num = 1000;
     document.getElementById("info").innerHTML = `instanced mesh count: ${num}`;
-    const objs = this.generate2DObjects(num);
+    const objs = this.generateObjects(num);
     this.renderer.updateObject(objs);
 
-    // basic object
-    // this.renderer.updateObject([
-    //   {
-    //     name: `tree_1`,
-    //     type: RenderType.Box,
-    //     gpuInstancing: false,
-    //     position: new Vector3(0, 400, 100),
-    //     scale: new Vector3(100, 100, 100),
-    //     color: "#ff6631",
-    //   },
-    // ]);
+    // createTestBasicObject(this)
     // createTestMeshLine(this);
     // createTestLineOutline(this);
-    createTestCustomShaderObject(this);
+    // createStroke(this);
   }
 
   setupCanvas() {
