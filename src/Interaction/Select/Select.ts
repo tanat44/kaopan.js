@@ -7,7 +7,7 @@ import { Hover } from "./Hover";
 import { SelectRectangle } from "./SelectRectangle";
 import { Selection } from "./Selection";
 
-const LEFT_BUTTON = 1;
+const LEFT_BUTTON = 0;
 
 enum Mode {
   Drag,
@@ -34,7 +34,7 @@ export class Select extends InteractionHandler {
   }
 
   onMouseDown(e: MouseEvent) {
-    if (e.buttons !== LEFT_BUTTON) return;
+    if (e.button !== LEFT_BUTTON) return;
 
     const intersection = this.mouseRay.findIntersection(e);
     if (intersection.count) {
@@ -48,13 +48,14 @@ export class Select extends InteractionHandler {
   onMouseMove(e: MouseEvent) {
     this.hover.onMouseMove(e);
 
-    if (e.buttons === LEFT_BUTTON) {
+    if (e.button === LEFT_BUTTON && e.buttons === 1) {
       if (this.drag.dragging) this.drag.onMouseMove(e);
       else this.selectRectangle.onMouseMove(e);
     }
   }
 
   onMouseUp(e: MouseEvent) {
+    if (e.button !== LEFT_BUTTON) return;
     if (this.drag.dragging) this.drag.onMouseUp(e);
     else {
       this.selectRectangle.onMouseUp(e);
