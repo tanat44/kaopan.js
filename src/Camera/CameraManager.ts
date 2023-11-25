@@ -43,8 +43,7 @@ export class CameraManager {
       this.engine.sceneManager.removeObject(oldCamera);
       this.engine.sceneManager.addObject(newCamera, false);
     }
-    if (this.engine.selectHandler)
-      this.engine.selectHandler.onCameraChange(this.currentCamera);
+    this.engine?.interaction?.onCameraChange(this.currentCamera);
   }
 
   get currentController() {

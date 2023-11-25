@@ -6,19 +6,19 @@ import { IAnimator } from "../Animation/IAnimator";
 import { CameraManager } from "../Camera/CameraManager";
 import { CameraType } from "../Camera/types";
 import { RenderObject, RenderType } from "../Data/types";
+import { Interaction } from "../Interaction/Interaction";
 import { MaterialManager } from "../Material/MaterialManager";
 import { RenderManager } from "../Render/Renderer";
 import { Transformer } from "../Tool/Transformer";
 import { Assets } from "./Assets";
 import { SceneManager } from "./SceneManager";
-import { SelectHandler } from "./SelectHandler";
 
 export class Engine {
-  container: HTMLElement;
+  element: HTMLElement;
   sceneManager: SceneManager;
   assets: Assets;
   materials: MaterialManager;
-  selectHandler: SelectHandler;
+  interaction: Interaction;
   renderer: RenderManager;
   transformer: Transformer;
 
@@ -32,12 +32,12 @@ export class Engine {
   animators: Map<string, IAnimator>;
 
   constructor(canvasId: string) {
-    this.container = document.getElementById(canvasId);
+    this.element = document.getElementById(canvasId);
     this.sceneManager = new SceneManager(this);
     this.setupCanvas();
     this.assets = new Assets(this);
     this.cameraManager = new CameraManager(this, CameraType.Perspective);
-    this.selectHandler = new SelectHandler(canvasId, this);
+    this.interaction = new Interaction(this);
     this.materials = new MaterialManager();
     this.renderer = new RenderManager(this);
     this.transformer = new Transformer(this);
@@ -55,7 +55,7 @@ export class Engine {
         name: `tree_1`,
         type: RenderType.Box,
         gpuInstancing: false,
-        position: new Vector3(0, 0, 100),
+        position: new Vector3(0, 400, 100),
         scale: new Vector3(100, 100, 100),
         color: "#ff6631",
       },
@@ -73,11 +73,11 @@ export class Engine {
     this.webglRenderer.shadowMap.enabled = true;
     this.clock = new Clock();
     this.webglRenderer.setAnimationLoop(() => this.tick());
-    this.container.appendChild(this.webglRenderer.domElement);
+    this.element.appendChild(this.webglRenderer.domElement);
 
     // add statistic
     this.stats = new Stats();
-    this.container.appendChild(this.stats.dom);
+    this.element.appendChild(this.stats.dom);
 
     window.addEventListener(
       "resize",
@@ -88,11 +88,11 @@ export class Engine {
   }
 
   get width() {
-    return this.container.offsetWidth;
+    return this.element.offsetWidth;
   }
 
   get height() {
-    return this.container.offsetHeight;
+    return this.element.offsetHeight;
   }
 
   tick() {

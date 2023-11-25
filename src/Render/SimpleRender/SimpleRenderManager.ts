@@ -44,7 +44,6 @@ export class SimpleRenderManager implements IRenderManager {
         render.update(object, ref.mesh);
       }
     }
-    this.engine.render();
   }
 
   remove(objectNames: string[]) {

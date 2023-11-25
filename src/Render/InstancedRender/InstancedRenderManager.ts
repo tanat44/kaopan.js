@@ -1,11 +1,11 @@
 import { Matrix4, Object3D, Vector3 } from "three";
 import { RenderObject, RenderType, name } from "../../Data/types";
 import { Engine } from "../../Engine/Engine";
+import { IRenderManager } from "../IRenderManager";
 import { InstancedBoxRender } from "./InstancedBoxRender";
+import { InstancedRectangleRender } from "./InstancedRectangleRender";
 import { InstancedRenderBase } from "./InstancedRenderBase";
 import { InstancedSphereRenderer } from "./InstancedSphereRender";
-import { IRenderManager } from "../IRenderManager";
-import { InstancedRectangleRender } from "./InstancedRectangleRender";
 
 type InstancedObject = {
   type: RenderType;
@@ -57,7 +57,6 @@ export class InstancedRenderManager implements IRenderManager {
 
   updateObject(objects: RenderObject[], parentName: name) {
     this.recursiveUpdateObject(objects, parentName);
-    this.engine.render();
   }
 
   remove(objectNames: name[]) {
