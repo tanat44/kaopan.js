@@ -1,26 +1,19 @@
-import { Vector3, BufferGeometry, Line, Matrix4, Quaternion } from "three";
-import { Engine } from "../Engine/Engine";
+import { Matrix4, Quaternion, Vector3 } from "three";
 import { name } from "../Data/types";
+import { Engine } from "../Engine/Engine";
 
 export class Transformer {
   engine: Engine;
 
-  geometry: BufferGeometry;
-  object: Line;
+  // geometry: BufferGeometry;
+  // line: MeshLine;
 
   constructor(engine: Engine) {
     this.engine = engine;
     this.createObject();
   }
 
-  createObject() {
-    this.geometry = new BufferGeometry();
-    this.object = new Line(
-      this.geometry,
-      this.engine.materials.lineBasicMaterialLibrary.getMaterial("#0062ff")
-    );
-    this.engine.scene.add(this.object);
-  }
+  createObject() {}
 
   setTransformObject(name: name, matrix: Matrix4) {
     const center = new Vector3();
@@ -40,10 +33,12 @@ export class Transformer {
       .sub(new Vector3(halfScale.x, newHeight, -halfScale.z));
     const bl = center
       .clone()
-      .sub(new Vector3(-halfScale.x, newHeight, halfScale.z));
+      .sub(new Vector3(halfScale.x, newHeight, halfScale.z));
     const br = center
       .clone()
-      .sub(new Vector3(halfScale.x, newHeight, halfScale.z));
-    this.geometry.setFromPoints([tl, tr, bl, br]);
+      .sub(new Vector3(-halfScale.x, newHeight, halfScale.z));
+    // this.geometry.setFromPoints([tl, tr, bl, br, tl]);
+    // this.line.setGeometry(this.geometry);
+    console.log("set transform");
   }
 }

@@ -1,8 +1,10 @@
-import { Matrix4, Object3D, Object3DEventMap, Vector3 } from "three";
+import { Matrix4, Object3D, Vector3 } from "three";
 import { RenderObject, RenderType, name } from "../../Data/types";
 import { Engine } from "../../Engine/Engine";
-import { SimpleBoxRender } from "./SimpleBoxRender";
 import { IRenderManager } from "../IRenderManager";
+import { SimpleBoxRender } from "./SimpleBoxRender";
+import { SimpleRenderBase } from "./SimpleRenderBase";
+import { SimpleSphereRender } from "./SimpleSphereRender";
 
 type ObjectReference = {
   type: RenderType;
@@ -13,33 +15,33 @@ export class SimpleRenderManager implements IRenderManager {
   engine: Engine;
   allObjects: Map<name, ObjectReference>;
 
-  boxRenderer: SimpleBoxRender;
+  renders: SimpleRenderBase[];
 
   constructor(engine: Engine) {
     this.engine = engine;
     this.allObjects = new Map();
-    this.boxRenderer = new SimpleBoxRender(engine);
+    this.renders = [
+      new SimpleBoxRender(engine),
+      new SimpleSphereRender(engine),
+    ];
   }
 
   updateObject(objects: RenderObject[]) {
     for (const object of objects) {
       // create object
+      const render = this.getRender(object.type);
       if (!this.allObjects.has(object.name)) {
-        if (object.type === RenderType.Box) {
-          const mesh = this.boxRenderer.create(object);
-          const ref = {
-            type: object.type,
-            mesh: mesh,
-          };
-          this.allObjects.set(object.name, ref);
-          this.engine.scene.add(mesh);
-        }
+        const mesh = render.create(object);
+        const ref = {
+          type: object.type,
+          mesh: mesh,
+        };
+        this.allObjects.set(object.name, ref);
+        this.engine.sceneManager.addObject(mesh, true);
       } else {
         // update object
         const ref = this.allObjects.get(object.name);
-        if (ref.type === RenderType.Box) {
-          this.boxRenderer.update(object, ref.mesh);
-        }
+        render.update(object, ref.mesh);
       }
     }
     this.engine.render();
@@ -50,7 +52,7 @@ export class SimpleRenderManager implements IRenderManager {
       const ref = this.allObjects.get(name);
       if (ref?.mesh) {
         this.allObjects.delete(name);
-        this.engine.scene.remove(ref.mesh);
+        this.engine.sceneManager.removeObject(ref.mesh);
       }
     }
   }
@@ -82,5 +84,10 @@ export class SimpleRenderManager implements IRenderManager {
     const objectRef = this.allObjects.get(name);
     if (!objectRef) return null;
     return objectRef.mesh.matrix;
+  }
+
+  getRender(type: RenderType): SimpleRenderBase {
+    const render = this.renders.find((render) => render.type === type);
+    return render;
   }
 }

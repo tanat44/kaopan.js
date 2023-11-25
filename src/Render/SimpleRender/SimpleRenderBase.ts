@@ -1,16 +1,18 @@
-import { BufferGeometry, Euler, InstancedMesh, Mesh, Object3D } from "three";
-import { Engine } from "../../Engine/Engine";
-import { RenderObject } from "../../Data/types";
+import { BufferGeometry, Euler, Object3D } from "three";
 import { DEG2RAD } from "three/src/math/MathUtils";
+import { RenderObject, RenderType } from "../../Data/types";
+import { Engine } from "../../Engine/Engine";
 
 export const RENDER_SCALE = 1;
 
 export abstract class SimpleRenderBase {
   geometry: BufferGeometry;
   engine: Engine;
+  type: RenderType;
 
   constructor(engine: Engine) {
     this.engine = engine;
+    this.type = RenderType.Unknown;
   }
 
   create(object: RenderObject): Object3D {

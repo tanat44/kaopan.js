@@ -7,9 +7,9 @@ import {
   Object3D,
   Vector3,
 } from "three";
-import { Engine } from "../../Engine/Engine";
-import { RenderObject, RenderType, name } from "../../Data/types";
 import { DEG2RAD } from "three/src/math/MathUtils";
+import { RenderObject, RenderType, name } from "../../Data/types";
+import { Engine } from "../../Engine/Engine";
 
 export const RENDER_SCALE = 1;
 export const MAX_OBJECTS_IN_INSTANCE = 10000;
@@ -132,7 +132,7 @@ export abstract class InstancedRenderBase {
       MAX_OBJECTS_IN_INSTANCE
     );
     this.instancedMeshes.push(mesh);
-    this.engine.scene.add(mesh);
+    this.engine.sceneManager.addObject(mesh, true);
   }
 
   getMatrix(name: name) {

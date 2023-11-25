@@ -1,38 +1,28 @@
-import {
-  AmbientLight,
-  Clock,
-  Color,
-  GridHelper,
-  Raycaster,
-  Scene,
-  SpotLight,
-  Vector3,
-  WebGLRenderer,
-} from "three";
+import { Clock, Vector3, WebGLRenderer } from "three";
 // @ts-ignore
-import { Assets } from "./Assets";
-import { MouseHandler } from "./MouseHandler";
-import { RenderObject, RenderType } from "../Data/types";
-import Stats from "three/examples/jsm/libs/stats.module";
-import { RenderManager } from "../Render/Renderer";
-import { CameraManager } from "../Camera/CameraManager";
 import _ from "lodash";
-import { CameraType } from "../Camera/types";
+import Stats from "three/examples/jsm/libs/stats.module";
 import { IAnimator } from "../Animation/IAnimator";
+import { CameraManager } from "../Camera/CameraManager";
+import { CameraType } from "../Camera/types";
+import { RenderObject, RenderType } from "../Data/types";
 import { MaterialManager } from "../Material/MaterialManager";
+import { RenderManager } from "../Render/Renderer";
 import { Transformer } from "../Tool/Transformer";
+import { Assets } from "./Assets";
+import { SceneManager } from "./SceneManager";
+import { SelectHandler } from "./SelectHandler";
 
 export class Engine {
   container: HTMLElement;
+  sceneManager: SceneManager;
   assets: Assets;
   materials: MaterialManager;
-  mouseHandler: MouseHandler;
+  selectHandler: SelectHandler;
   renderer: RenderManager;
   transformer: Transformer;
 
   // Threejs
-  scene: Scene;
-  raycaster: Raycaster;
   webglRenderer: WebGLRenderer;
   stats: Stats;
   cameraManager: CameraManager;
@@ -42,44 +32,40 @@ export class Engine {
   animators: Map<string, IAnimator>;
 
   constructor(canvasId: string) {
-    this.animators = new Map();
+    this.container = document.getElementById(canvasId);
+    this.sceneManager = new SceneManager(this);
+    this.setupCanvas();
     this.assets = new Assets(this);
-    this.raycaster = new Raycaster();
-    this.setupScene(canvasId);
     this.cameraManager = new CameraManager(this, CameraType.Perspective);
-    this.setupLighting();
-    this.mouseHandler = new MouseHandler(canvasId, this);
-    this.setupGrid();
+    this.selectHandler = new SelectHandler(canvasId, this);
     this.materials = new MaterialManager();
     this.renderer = new RenderManager(this);
     this.transformer = new Transformer(this);
+    this.animators = new Map();
 
-    // render test objects
+    // // render test objects
     const num = 1000;
     document.getElementById("info").innerHTML = `instanced mesh count: ${num}`;
     const objs = this.generate2DObjects(num);
     this.renderer.updateObject(objs);
+
+    // basic object
+    this.renderer.updateObject([
+      {
+        name: `tree_1`,
+        type: RenderType.Box,
+        gpuInstancing: false,
+        position: new Vector3(0, 0, 100),
+        scale: new Vector3(100, 100, 100),
+        color: "#ff6631",
+      },
+    ]);
+    // createTestMeshLine(this);
+    // createTestLineOutline(this);
+    // createTestCustomShaderObject(this);
   }
 
-  setupLighting() {
-    this.scene.add(new AmbientLight(0xf0f0f0));
-    const light = new SpotLight(0xffffff, 1.5);
-    light.position.set(0, 1500, 200);
-    light.angle = Math.PI * 0.2;
-    light.castShadow = true;
-    light.shadow.camera.near = 200;
-    light.shadow.camera.far = 2000;
-    light.shadow.bias = -0.000222;
-    light.shadow.mapSize.width = 1024;
-    light.shadow.mapSize.height = 1024;
-    this.scene.add(light);
-  }
-
-  setupScene(canvasId: string) {
-    this.container = document.getElementById(canvasId);
-    this.scene = new Scene();
-    this.scene.background = new Color(0xf0f0f0);
-
+  setupCanvas() {
     // setup webgl container
     this.webglRenderer = new WebGLRenderer({ antialias: true });
     this.webglRenderer.setPixelRatio(window.devicePixelRatio);
@@ -107,17 +93,6 @@ export class Engine {
 
   get height() {
     return this.container.offsetHeight;
-  }
-
-  setupGrid() {
-    // draw grid helper
-    const grid = new GridHelper(2000, 100);
-    grid.name = "gridHelper";
-    grid.position.y = 0;
-    (grid.material as any).opacity = 0.25;
-    (grid.material as any).transparent = true;
-    this.scene.add(grid);
-    this.mouseHandler.ignoreObjects.add(grid.name);
   }
 
   tick() {
@@ -158,7 +133,10 @@ export class Engine {
     if (!this.cameraManager) {
       return;
     }
-    this.webglRenderer.render(this.scene, this.cameraManager.currentCamera);
+    this.webglRenderer.render(
+      this.sceneManager.scene,
+      this.cameraManager.currentCamera
+    );
   }
 
   generateObjects(number: number) {

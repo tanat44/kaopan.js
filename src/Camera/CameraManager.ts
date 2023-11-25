@@ -1,8 +1,8 @@
 import { Vector3 } from "three";
 import { Engine } from "../Engine/Engine";
-import { CameraType } from "./types";
 import { OrthographicController } from "./OrthographicController";
 import { PerspectiveController } from "./PerspectiveController";
+import { CameraType } from "./types";
 
 export const INITIAL_CAMERA_POSITION = new Vector3(0, 3000, 2000);
 
@@ -40,11 +40,11 @@ export class CameraManager {
     this.currentController.onChange(prevType, newType);
 
     if (this.currentCamera !== newCamera) {
-      this.engine.scene.remove(oldCamera);
-      this.engine.scene.add(newCamera);
+      this.engine.sceneManager.removeObject(oldCamera);
+      this.engine.sceneManager.addObject(newCamera, false);
     }
-    if (this.engine.mouseHandler)
-      this.engine.mouseHandler.onCameraChange(this.currentCamera);
+    if (this.engine.selectHandler)
+      this.engine.selectHandler.onCameraChange(this.currentCamera);
   }
 
   get currentController() {

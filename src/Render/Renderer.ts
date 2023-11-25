@@ -1,10 +1,4 @@
-import {
-  BufferGeometry,
-  InstancedMesh,
-  Matrix4,
-  Object3D,
-  Vector3,
-} from "three";
+import { InstancedMesh, Matrix4, Object3D, Vector3 } from "three";
 import { RenderObject, name } from "../Data/types";
 import { Engine } from "../Engine/Engine";
 import { IRenderManager } from "./IRenderManager";
@@ -47,7 +41,7 @@ export class RenderManager {
         simpleObjects.push(object);
       }
     }
-    // this.simpleRenderManager.updateObject(simpleObjects);
+    this.simpleRenderManager.updateObject(simpleObjects);
     this.instancedRenderManager.updateObject(gpuObjects, null);
   }
 

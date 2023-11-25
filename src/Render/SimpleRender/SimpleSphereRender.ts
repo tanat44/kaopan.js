@@ -1,17 +1,19 @@
-import { BoxGeometry, Mesh } from "three";
+import { Mesh, SphereGeometry } from "three";
 import { RenderObject, RenderType } from "../../Data/types";
 import { Engine } from "../../Engine/Engine";
 import { SimpleRenderBase } from "./SimpleRenderBase";
 
-export class SimpleBoxRender extends SimpleRenderBase {
+const SEGMENTS = 24;
+
+export class SimpleSphereRender extends SimpleRenderBase {
   constructor(engine: Engine) {
     super(engine);
-    this.geometry = new BoxGeometry(1, 1, 1);
-    this.type = RenderType.Box;
+    this.geometry = new SphereGeometry(1, SEGMENTS, SEGMENTS);
+    this.type = RenderType.Sphere;
   }
 
   create(object: RenderObject): Mesh {
-    const material = this.engine.materials.meshBasicMaterialLibrary.getMaterial(
+    const material = this.engine.materials.meshToonMaterialLibrary.getMaterial(
       object.color
     );
     const mesh = new Mesh(this.geometry, material);
