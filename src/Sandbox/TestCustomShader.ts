@@ -1,7 +1,6 @@
 import {
   BufferAttribute,
   BufferGeometry,
-  Color,
   DoubleSide,
   Mesh,
   ShaderMaterial,
@@ -9,52 +8,31 @@ import {
 import { Engine } from "../Engine/Engine";
 
 export function createTestCustomShaderObject(engine: Engine) {
-  const size = 100.0;
   const geometry = new BufferGeometry();
   const vertices = new Float32Array([
-    -size,
+    -0.5,
     0,
-    -size, // v0
-    size,
+    -0.5, // v0
+    0.5,
     0,
-    -size, // v1
-    size,
+    -0.5, // v1
+    0.5,
     0,
-    size, // v2
-    size,
+    0.5, // v2
+    0.5,
     0,
-    size, // v3
-    -size,
+    0.5, // v3
+    -0.5,
     0,
-    size, // v4
-    -size,
+    0.5, // v4
+    -0.5,
     0,
-    -size, // v5
-    -size / 2,
-    0,
-    -size / 2, // v0
-    size / 2,
-    0,
-    -size / 2, // v1
-    size / 2,
-    0,
-    size / 2, // v2
-    size / 2,
-    0,
-    size / 2, // v3
-    -size / 2,
-    0,
-    size / 2, // v4
-    -size / 2,
-    0,
-    -size / 2, // v5
+    -0.5, // v5
   ]);
   geometry.setAttribute("position", new BufferAttribute(vertices, 3));
   let uniforms = {
-    colorB: { type: "vec3", value: new Color(0xacb6e5) },
-    colorA: { type: "vec3", value: new Color(0x74ebd5) },
-    width: { value: 1.0 },
-    alpha: { value: 1.0 },
+    stroke: { value: 1 },
+    alpha: { value: 0.7 },
   };
   let material = new ShaderMaterial({
     uniforms: uniforms,
@@ -65,22 +43,20 @@ export function createTestCustomShaderObject(engine: Engine) {
     depthTest: false,
   });
   let mesh = new Mesh(geometry, material);
+  mesh.scale.set(300, 1, 700);
+  mesh.position.setY(10);
   engine.sceneManager.addObject(mesh, true);
 }
 
 function vertex() {
   return `
   varying vec3 data; 
+  varying vec3 scale;
   varying float strokeAlpha;
 
   void main() {
-    data = position; 
-    float thres = 3.0;
-    if (position.x > -60.0 && position.x < 60.0){
-      strokeAlpha = 0.0;
-    }else{
-      strokeAlpha = 1.0;
-    }
+    data = position;
+    scale = vec3(modelMatrix[0][0],modelMatrix[1][1],modelMatrix[2][2]);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); 
   }
 `;
@@ -90,14 +66,19 @@ function fragment() {
   return `
   uniform vec3 colorA; 
   uniform vec3 colorB; 
-  uniform float width;
+  uniform float stroke;
   uniform float alpha;
   varying vec3 data;
-  varying float strokeAlpha;
+  varying vec3 scale;
 
   void main() {
-    //gl_FragColor = vec4((data.x+100.0)/200.0, (data.y+100.0)/200.0, 1, gl_FragCoord.y);
-    gl_FragColor = vec4(strokeAlpha, 0, 0, 0.5);
+    float a = alpha;
+    float size = 0.5;
+    vec3 scaleStroke = stroke / scale;
+    if (data.x > -size + scaleStroke.x && data.x < size - scaleStroke.x && data.z > -size + scaleStroke.z && data.z < size - scaleStroke.z){
+      a = 0.0;
+    }
+    gl_FragColor = vec4(1.0, 0, 0.5, a);
   }
 `;
 }

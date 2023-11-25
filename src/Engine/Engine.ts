@@ -9,6 +9,7 @@ import { RenderObject, RenderType } from "../Data/types";
 import { Interaction } from "../Interaction/Interaction";
 import { MaterialManager } from "../Material/MaterialManager";
 import { RenderManager } from "../Render/Renderer";
+import { createTestCustomShaderObject } from "../Sandbox/TestCustomShader";
 import { Transformer } from "../Tool/Transformer";
 import { Assets } from "./Assets";
 import { SceneManager } from "./SceneManager";
@@ -50,19 +51,19 @@ export class Engine {
     this.renderer.updateObject(objs);
 
     // basic object
-    this.renderer.updateObject([
-      {
-        name: `tree_1`,
-        type: RenderType.Box,
-        gpuInstancing: false,
-        position: new Vector3(0, 400, 100),
-        scale: new Vector3(100, 100, 100),
-        color: "#ff6631",
-      },
-    ]);
+    // this.renderer.updateObject([
+    //   {
+    //     name: `tree_1`,
+    //     type: RenderType.Box,
+    //     gpuInstancing: false,
+    //     position: new Vector3(0, 400, 100),
+    //     scale: new Vector3(100, 100, 100),
+    //     color: "#ff6631",
+    //   },
+    // ]);
     // createTestMeshLine(this);
     // createTestLineOutline(this);
-    // createTestCustomShaderObject(this);
+    createTestCustomShaderObject(this);
   }
 
   setupCanvas() {

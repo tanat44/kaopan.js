@@ -76,6 +76,7 @@ export class Hover extends InteractionHandler {
       intersection.instanceId
     );
     const matrix = this.engine.renderer.getMatrix(objectName);
+    if (!matrix) return;
     const center = new Vector3();
     const rotation = new Quaternion();
     const scale = new Vector3();
