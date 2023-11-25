@@ -13,7 +13,7 @@ export class SimpleSphereRender extends SimpleRenderBase {
   }
 
   create(object: RenderObject): Mesh {
-    const material = this.engine.materials.meshToonMaterialLibrary.getMaterial(
+    const material = this.engine.materials.meshBasicMaterialLibrary.getMaterial(
       object.color
     );
     const mesh = new Mesh(this.geometry, material);
