@@ -8,7 +8,7 @@ import { MouseRay } from "../MouseRay";
 
 export class SelectRectangle extends InteractionHandler {
   mouseRay: MouseRay;
-  clickPosition: Vector3;
+  downPosition: Vector3;
 
   selection: Mesh;
 
@@ -22,17 +22,25 @@ export class SelectRectangle extends InteractionHandler {
   }
 
   onMouseDown(e: MouseEvent): void {
-    this.clickPosition = this.mouseRay.findPlaneIntersection(e, 0);
+    this.downPosition = this.mouseRay.findPlaneIntersection(e, 0);
     this.engine.sceneManager.addObject(this.selection, false);
     this.selection.scale.set(0, 0, 0);
   }
 
   onMouseMove(e: MouseEvent): void {
-    const pos = this.mouseRay.findPlaneIntersection(e, 0);
-    const size = pos.clone().sub(this.clickPosition);
-    const center = this.clickPosition
-      .clone()
-      .add(size.clone().multiplyScalar(0.5));
+    const newPosition = this.mouseRay.findPlaneIntersection(e, 0);
+
+    // swap value to prevent minus size rectangle
+    const downPosition = this.downPosition.clone();
+    if (newPosition.x < downPosition.x) {
+      this.swap(newPosition, downPosition, "x");
+    }
+    if (newPosition.z < downPosition.z) {
+      this.swap(newPosition, downPosition, "z");
+    }
+
+    const size = newPosition.clone().sub(downPosition);
+    const center = downPosition.clone().add(size.clone().multiplyScalar(0.5));
     this.selection.position.copy(center);
     this.selection.scale.set(size.x, 1, size.z);
   }
@@ -52,5 +60,11 @@ export class SelectRectangle extends InteractionHandler {
 
     const names = this.engine.renderer.getIntersectObjects(box);
     return names;
+  }
+
+  private swap(a: Vector3, b: Vector3, element: "x" | "y" | "z") {
+    const temp = a[element];
+    a[element] = b[element];
+    b[element] = temp;
   }
 }

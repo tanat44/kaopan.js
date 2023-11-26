@@ -1,4 +1,4 @@
-import { DoubleSide, ShaderMaterial } from "three";
+import { Color, DoubleSide, ShaderMaterial, Uniform, Vector4 } from "three";
 
 const VERTEX = `
   varying vec3 data; 
@@ -19,29 +19,28 @@ const VERTEX = `
 
 const FRAGMENT = `
   uniform float stroke;
-  uniform float alpha;
+  uniform vec4 color;
   varying vec3 data;
   varying vec3 scale;
   varying float distance;
 
   void main() {
-    float a = alpha;
+    float alpha = color.w;
     float size = 0.5;
     vec3 scaleStroke = stroke / scale;
     if (data.x > -size + scaleStroke.x && data.x < size - scaleStroke.x && data.z > -size + scaleStroke.z && data.z < size - scaleStroke.z){
-      a = 0.0;
+      alpha = 0.0;
     }
-    // gl_FragColor = vec4(0.27, 0.59, 0.97, a);
-    gl_FragColor = vec4(1.0, 0, 0, a);
+    gl_FragColor = vec4(color.xyz, alpha);
   }
 `;
 
 export class StrokeMaterial extends ShaderMaterial {
-  constructor() {
+  constructor(color: Color = new Color(0.27, 0.59, 0.97), alpha: number = 1.0) {
     super({
       uniforms: {
         stroke: { value: 2 },
-        alpha: { value: 1.0 },
+        color: new Uniform(new Vector4(color.r, color.g, color.b)),
       },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,

@@ -1,4 +1,4 @@
-import { Mesh, Quaternion, Vector3 } from "three";
+import { Color, Mesh, Quaternion, Vector3 } from "three";
 import { Engine } from "../../Engine/Engine";
 import { StrokeGeometry } from "../../Geometry/Stroke/StrokeGeometry";
 import { StrokeMaterial } from "../../Geometry/Stroke/StrokeMaterial";
@@ -6,6 +6,7 @@ import { InteractionHandler } from "../InteractionHandler";
 import { MouseRay } from "../MouseRay";
 
 const HOVER_COLOR = 0x4597f8;
+const HOVER_HEIGHT = 5.0;
 
 export class Hover extends InteractionHandler {
   mouseRay: MouseRay;
@@ -17,7 +18,7 @@ export class Hover extends InteractionHandler {
 
     // create mesh line
     const geometry = new StrokeGeometry();
-    const material = new StrokeMaterial();
+    const material = new StrokeMaterial(new Color(0xf2ff00));
     material.depthTest = false;
     this.activeRectangle = new Mesh(geometry, material);
   }
@@ -38,7 +39,7 @@ export class Hover extends InteractionHandler {
     const rotation = new Quaternion();
     const scale = new Vector3();
     matrix.decompose(center, rotation, scale);
-    center.y += 10.0;
+    center.y += HOVER_HEIGHT;
     this.activeRectangle.scale.copy(scale);
     this.activeRectangle.position.copy(center);
     this.engine.sceneManager.addObject(this.activeRectangle, false);
