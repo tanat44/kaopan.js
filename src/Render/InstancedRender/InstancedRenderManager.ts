@@ -1,4 +1,4 @@
-import { Matrix4, Object3D, Vector3 } from "three";
+import { Box3, Matrix4, Object3D, Vector3 } from "three";
 import { RenderObject, RenderType, name } from "../../Data/types";
 import { Engine } from "../../Engine/Engine";
 import { IRenderManager } from "../IRenderManager";
@@ -17,8 +17,6 @@ type InstancedObject = {
 export class InstancedRenderManager implements IRenderManager {
   engine: Engine;
   instancedRenders: Map<RenderType, InstancedRenderBase>;
-
-  // data
   instancedObjects: Map<name, InstancedObject>;
 
   constructor(engine: Engine) {
@@ -158,5 +156,14 @@ export class InstancedRenderManager implements IRenderManager {
     const render = this.getInstanceRender(instancedObject.type);
     const matrix = render.getMatrix(name);
     return matrix;
+  }
+
+  getIntersectObjects(box: Box3): name[] {
+    const objectNames: name[] = [];
+    this.instancedRenders.forEach((render, type) => {
+      const names = render.getIntersectObjects(box);
+      objectNames.push(...names);
+    });
+    return objectNames;
   }
 }

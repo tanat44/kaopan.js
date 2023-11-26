@@ -1,61 +1,36 @@
 import { Vector3 } from "three";
 import { Engine } from "../../Engine/Engine";
 // @ts-ignore
-import { name } from "../../Data/types";
 import { InteractionHandler } from "../InteractionHandler";
 import { MouseRay } from "../MouseRay";
+import { Selection } from "./Selection";
 
 export class Drag extends InteractionHandler {
   mouseRay: MouseRay;
+  selection: Selection;
 
-  clickPosition: Vector3;
-  objectOriginalPosition: Vector3;
-  draggingObjectName: name;
+  mouseDownPosition: Vector3;
 
-  constructor(engine: Engine) {
+  constructor(engine: Engine, mouseRay: MouseRay, selection: Selection) {
     super(engine);
-    this.mouseRay = new MouseRay(engine);
-    this.objectOriginalPosition = new Vector3();
-    this.clickPosition = new Vector3();
+    this.mouseRay = mouseRay;
+    this.selection = selection;
+    this.mouseDownPosition = new Vector3();
   }
 
-  onMouseDown(e: MouseEvent) {
+  onMouseDown(e: MouseEvent): void {
     const intersection = this.mouseRay.findIntersection(e);
-    const objectName = this.engine.renderer.findObjectName(
-      intersection.object,
-      intersection.instanceId
-    );
-    if (!objectName) return;
-    this.draggingObjectName = objectName;
-    this.objectOriginalPosition = this.engine.renderer.getGlobalPosition(
-      this.draggingObjectName
-    );
-    this.clickPosition = this.mouseRay.findPlaneIntersection(
-      e,
-      this.objectOriginalPosition.y
-    );
-    console.log("clicked:", this.draggingObjectName);
-    this.engine.transformer.setTransformObject(
-      objectName,
-      this.engine.renderer.getMatrix(objectName)
-    );
+    this.mouseDownPosition.copy(intersection.point);
   }
 
   onMouseMove(e: MouseEvent) {
-    if (!this.draggingObjectName) return;
-    const intersection = this.mouseRay.findPlaneIntersection(
+    if (!this.selection || this.selection?.count === 0) return;
+    const newPoint = this.mouseRay.findPlaneIntersection(
       e,
-      this.objectOriginalPosition.y
+      this.mouseDownPosition.y
     );
-    intersection.sub(this.clickPosition).add(this.objectOriginalPosition);
-    this.engine.renderer.updatePosition(this.draggingObjectName, intersection);
-  }
-
-  onMouseUp(e: MouseEvent) {
-    this.draggingObjectName = null;
-  }
-
-  get dragging() {
-    return !!this.draggingObjectName;
+    const delta = newPoint.sub(this.mouseDownPosition);
+    delta.y = 0; // constraint move on XZ plane
+    this.selection.move(delta);
   }
 }

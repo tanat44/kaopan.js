@@ -1,4 +1,5 @@
 import {
+  Box3,
   BufferGeometry,
   Color,
   Euler,
@@ -159,5 +160,16 @@ export abstract class InstancedRenderBase {
         return key;
     }
     return null;
+  }
+
+  getIntersectObjects(box: Box3): name[] {
+    const intersectNames: name[] = [];
+    this.allObjects.forEach((ref, name) => {
+      const matrix = this.getMatrix(name);
+      const position = new Vector3();
+      position.setFromMatrixPosition(matrix);
+      if (box.containsPoint(position)) intersectNames.push(name);
+    });
+    return intersectNames;
   }
 }

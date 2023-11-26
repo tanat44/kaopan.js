@@ -9,12 +9,11 @@ const HOVER_COLOR = 0x4597f8;
 
 export class Hover extends InteractionHandler {
   mouseRay: MouseRay;
-
   activeRectangle: Mesh;
 
-  constructor(engine: Engine) {
+  constructor(engine: Engine, mouseRay: MouseRay) {
     super(engine);
-    this.mouseRay = new MouseRay(engine);
+    this.mouseRay = mouseRay;
 
     // create mesh line
     const geometry = new StrokeGeometry();

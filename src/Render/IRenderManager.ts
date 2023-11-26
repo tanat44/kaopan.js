@@ -1,4 +1,4 @@
-import { Matrix4, Object3D, Vector3 } from "three";
+import { Box3, Matrix4, Object3D, Vector3 } from "three";
 import { RenderObject, name } from "../Data/types";
 
 export interface IRenderManager {
@@ -8,4 +8,5 @@ export interface IRenderManager {
   getGlobalPosition(name: name): Vector3;
   getMatrix(name: name): Matrix4;
   updatePosition(name: name, newPosition: Vector3): void;
+  getIntersectObjects(box: Box3): name[];
 }

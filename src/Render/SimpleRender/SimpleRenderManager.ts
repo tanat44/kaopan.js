@@ -1,4 +1,4 @@
-import { Matrix4, Object3D, Vector3 } from "three";
+import { Box3, Matrix4, Object3D, Vector3 } from "three";
 import { RenderObject, RenderType, name } from "../../Data/types";
 import { Engine } from "../../Engine/Engine";
 import { IRenderManager } from "../IRenderManager";
@@ -88,5 +88,9 @@ export class SimpleRenderManager implements IRenderManager {
   getRender(type: RenderType): SimpleRenderBase {
     const render = this.renders.find((render) => render.type === type);
     return render;
+  }
+
+  getIntersectObjects(box: Box3): name[] {
+    return [];
   }
 }

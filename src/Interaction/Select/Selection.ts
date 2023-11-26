@@ -1,21 +1,28 @@
 import { Engine } from "../../Engine/Engine";
 // @ts-ignore
-import { Mesh } from "three";
+import { Mesh, Vector3 } from "three";
 import { name } from "../../Data/types";
 import { StrokeGeometry } from "../../Geometry/Stroke/StrokeGeometry";
 import { StrokeMaterial } from "../../Geometry/Stroke/StrokeMaterial";
+import { MouseRay } from "../MouseRay";
+
+type SelectObject = {
+  name: name;
+  highlightMesh: Mesh;
+  originalPosition: Vector3;
+};
 
 export class Selection {
   engine: Engine;
-  selectedObjects: Set<name>;
-  meshes: Mesh[];
+  mouseRay: MouseRay;
+  selectedObjects: Map<name, SelectObject>;
   geometry: StrokeGeometry;
   material: StrokeMaterial;
 
-  constructor(engine: Engine) {
+  constructor(engine: Engine, mouseRay: MouseRay) {
     this.engine = engine;
-    this.selectedObjects = new Set();
-    this.meshes = [];
+    this.mouseRay = mouseRay;
+    this.selectedObjects = new Map();
 
     this.geometry = new StrokeGeometry();
     this.material = new StrokeMaterial();
@@ -23,21 +30,40 @@ export class Selection {
   }
 
   deselect() {
-    this.meshes.forEach((mesh) => {
-      this.engine.sceneManager.removeObject(mesh);
+    this.selectedObjects.forEach((selectObject, name) => {
+      this.engine.sceneManager.removeObject(selectObject.highlightMesh);
     });
-    this.meshes = [];
     this.selectedObjects.clear();
   }
 
   select(names: name[]) {
+    this.deselect();
     names.forEach((name) => {
       const matrix = this.engine.renderer.getMatrix(name);
-      const mesh = new Mesh(this.geometry, this.material);
-      mesh.applyMatrix4(matrix);
-      this.meshes.push(mesh);
-      this.engine.sceneManager.addObject(mesh, false);
+      const highlightMesh = new Mesh(this.geometry, this.material);
+      highlightMesh.applyMatrix4(matrix);
+      this.engine.sceneManager.addObject(highlightMesh, false);
+
+      const position = new Vector3();
+      position.setFromMatrixPosition(matrix);
+      this.selectedObjects.set(name, {
+        name,
+        highlightMesh,
+        originalPosition: position,
+      });
     });
+  }
+
+  move(delta: Vector3) {
+    this.selectedObjects.forEach((selectObject, name) => {
+      const newPosition = selectObject.originalPosition.clone().add(delta);
+      this.engine.renderer.updatePosition(name, newPosition);
+      selectObject.highlightMesh.position.copy(newPosition);
+    });
+  }
+
+  get count() {
+    return this.selectedObjects.size;
   }
 
   // select(names: name[]) {

@@ -1,4 +1,4 @@
-import { InstancedMesh, Matrix4, Object3D, Vector3 } from "three";
+import { Box3, InstancedMesh, Matrix4, Object3D, Vector3 } from "three";
 import { RenderObject, name } from "../Data/types";
 import { Engine } from "../Engine/Engine";
 import { IRenderManager } from "./IRenderManager";
@@ -63,5 +63,11 @@ export class RenderManager {
     if (!manager) return null;
 
     return manager.getMatrix(name);
+  }
+
+  getIntersectObjects(box: Box3): name[] {
+    const name1 = this.instancedRenderManager.getIntersectObjects(box);
+    const name2 = this.simpleRenderManager.getIntersectObjects(box);
+    return [...name1, ...name2];
   }
 }

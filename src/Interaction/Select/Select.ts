@@ -18,19 +18,19 @@ enum Mode {
 export class Select extends InteractionHandler {
   mouseRay: MouseRay;
 
-  drag: Drag;
   hover: Hover;
   selectRectangle: SelectRectangle;
   selection: Selection;
+  drag: Drag;
 
   constructor(engine: Engine) {
     super(engine);
     this.engine = engine;
     this.mouseRay = new MouseRay(engine);
-    this.drag = new Drag(engine);
-    this.hover = new Hover(engine);
-    this.selectRectangle = new SelectRectangle(engine);
-    this.selection = new Selection(engine);
+    this.hover = new Hover(engine, this.mouseRay);
+    this.selectRectangle = new SelectRectangle(engine, this.mouseRay);
+    this.selection = new Selection(engine, this.mouseRay);
+    this.drag = new Drag(engine, this.mouseRay, this.selection);
   }
 
   onMouseDown(e: MouseEvent) {
@@ -38,6 +38,11 @@ export class Select extends InteractionHandler {
 
     const intersection = this.mouseRay.findIntersection(e);
     if (intersection.count) {
+      const objectName = this.engine.renderer.findObjectName(
+        intersection.object,
+        intersection.instanceId
+      );
+      if (this.selection.count === 0) this.selection.select([objectName]);
       this.drag.onMouseDown(e);
     } else {
       this.selectRectangle.onMouseDown(e);
@@ -49,21 +54,16 @@ export class Select extends InteractionHandler {
     this.hover.onMouseMove(e);
 
     if (e.button === LEFT_BUTTON && e.buttons === 1) {
-      if (this.drag.dragging) this.drag.onMouseMove(e);
+      if (this.selection.count) this.drag.onMouseMove(e);
       else this.selectRectangle.onMouseMove(e);
     }
   }
 
   onMouseUp(e: MouseEvent) {
     if (e.button !== LEFT_BUTTON) return;
-    if (this.drag.dragging) this.drag.onMouseUp(e);
-    else {
-      this.selectRectangle.onMouseUp(e);
-      const names = [];
-      for (let i = 0; i < 100; ++i) {
-        names.push(`tree_${Math.round(Math.random() * 1000)}`);
-      }
-      this.selection.select(names);
-    }
+
+    this.selectRectangle.onMouseUp(e);
+    const names = this.selectRectangle.getObjectNames();
+    this.selection.select(names);
   }
 }
