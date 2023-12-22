@@ -9,6 +9,7 @@ import { RenderObject, RenderType } from "../Data/types";
 import { Interaction } from "../Interaction/Interaction";
 import { MaterialManager } from "../Material/MaterialManager";
 import { RenderManager } from "../Render/Renderer";
+import { createTestInstanceLine } from "../Sandbox/TestInstanceLine";
 import { Transformer } from "../Tool/Transformer";
 import { SceneManager } from "./SceneManager";
 
@@ -40,16 +41,26 @@ export class Engine {
     this.transformer = new Transformer(this);
     this.animators = new Map();
 
-    // // render test objects
-    const num = 1000;
-    document.getElementById("info").innerHTML = `instanced mesh count: ${num}`;
-    const objs = this.generateObjects(num);
-    this.renderer.updateObject(objs);
-
+    // render test objects
+    createTestInstanceLine(this);
+    // createTest3DTree(this, 1000);
     // createTestBasicObject(this)
     // createTestMeshLine(this);
     // createTestLineOutline(this);
     // createStroke(this);
+
+    // const geometry = new LineGeometry();
+    // const material = new MeshBasicMaterial({
+    //   color: new Color("red"),
+    //   side: DoubleSide,
+    //   opacity: 1.0,
+    //   transparent: true,
+    // });
+    // const mesh = new Mesh(geometry, material);
+    // mesh.scale.set(100, 100, 100);
+    // this.sceneManager.addObject(mesh, true);
+    // console.log(this.sceneManager.scene);
+    // this.render();
   }
 
   setupCanvas() {
@@ -126,55 +137,6 @@ export class Engine {
     );
   }
 
-  generateObjects(number: number) {
-    const objects: RenderObject[] = [];
-    for (let i = 0; i < number; ++i) {
-      const snowSize = 8;
-      const treeSize = 30;
-      const levelHeight = 30;
-      const snow = {
-        name: `snow${i}`,
-        type: RenderType.Sphere,
-        position: new Vector3(0, levelHeight * 0.5, 0),
-        scale: new Vector3(snowSize, snowSize, snowSize),
-        color: "#fffeed",
-      };
-      const level3: RenderObject = {
-        name: `level3_${i}`,
-        type: RenderType.Box,
-        gpuInstancing: true,
-        position: new Vector3(0, levelHeight, 0),
-        scale: new Vector3(treeSize * 0.3, levelHeight, treeSize * 0.3),
-        color: "#78b522",
-        children: [snow],
-      };
-      const level2: RenderObject = {
-        name: `level2_${i}`,
-        type: RenderType.Box,
-        gpuInstancing: true,
-        position: new Vector3(0, levelHeight, 0),
-        scale: new Vector3(treeSize * 0.8, levelHeight, treeSize * 0.8),
-        color: "#399e23",
-        children: [level3],
-      };
-      const tree: RenderObject = {
-        name: `tree_${i}`,
-        type: RenderType.Box,
-        gpuInstancing: true,
-        position: new Vector3(
-          Math.random() * 2000 - 1000,
-          Math.random() * 1000,
-          Math.random() * 2000 - 1000
-        ),
-        scale: new Vector3(treeSize, levelHeight, treeSize),
-        color: "#216631",
-        children: [level2],
-      };
-      objects.push(tree);
-    }
-    return objects;
-  }
-
   generate2DObjects(number: number) {
     const objects: RenderObject[] = [];
     for (let i = 0; i < number; ++i) {
@@ -199,5 +161,9 @@ export class Engine {
     const value = Math.floor(Math.random() * 0xffffff);
     const hexString = String(value.toString(16)).padEnd(6, "F");
     return `#${hexString}`;
+  }
+
+  updateScreenInto(text: string) {
+    document.getElementById("info").innerHTML = text;
   }
 }

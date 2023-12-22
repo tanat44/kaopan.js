@@ -9,6 +9,8 @@ export enum RenderType {
   Rectangle,
   Circle,
   Polyline,
+  Line,
+  Arrow,
   // etc
   Unknown,
 
@@ -36,4 +38,6 @@ export type RenderObject = {
 
   // modifiers
   animation?: Animation;
+  controlPoints?: Vector3[];
+  strokeWidth?: number;
 };

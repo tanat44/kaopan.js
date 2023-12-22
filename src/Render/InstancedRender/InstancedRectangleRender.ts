@@ -1,8 +1,8 @@
-import { BoxGeometry, Euler, Matrix4, PlaneGeometry } from "three";
-import { Engine } from "../../Engine/Engine";
-import { InstancedRenderBase, RENDER_SCALE } from "./InstancedRenderBase";
-import { RenderObject, RenderType } from "../../Data/types";
+import { Euler, Matrix4, PlaneGeometry } from "three";
 import { DEG2RAD } from "three/src/math/MathUtils";
+import { RenderObject, RenderType } from "../../Data/types";
+import { Engine } from "../../Engine/Engine";
+import { InstancedRenderBase } from "./InstancedRenderBase";
 
 export class InstancedRectangleRender extends InstancedRenderBase {
   constructor(engine: Engine) {
@@ -17,9 +17,8 @@ export class InstancedRectangleRender extends InstancedRenderBase {
     if (!object.scale) return;
     const newScale = object.scale.clone();
     newScale.y = 1;
-    const s = newScale.multiplyScalar(RENDER_SCALE);
     const m = new Matrix4();
-    m.makeScale(s.x, s.y, s.z);
+    m.makeScale(newScale.x, newScale.y, newScale.z);
     matrix.multiply(m);
   }
 

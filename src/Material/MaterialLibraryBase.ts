@@ -8,7 +8,7 @@ export abstract class MaterialLibraryBase<T> {
   }
 
   getMaterial(color: string = null): Material {
-    if (!color) color = "0xffffff";
+    if (!color) color = "#ffffff";
     if (this.library.has(color)) return this.library.get(color);
     const mat = this.createMaterial(color) as Material;
     this.library.set(color, mat);

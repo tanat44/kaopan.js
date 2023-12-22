@@ -2,7 +2,9 @@ import { Box3, Matrix4, Object3D, Vector3 } from "three";
 import { RenderObject, RenderType, name } from "../../Data/types";
 import { Engine } from "../../Engine/Engine";
 import { IRenderManager } from "../IRenderManager";
+import { InstancedArrowRender } from "./InstancedArrowRender";
 import { InstancedBoxRender } from "./InstancedBoxRender";
+import { InstancedLineRender } from "./InstancedLineRender";
 import { InstancedRectangleRender } from "./InstancedRectangleRender";
 import { InstancedRenderBase } from "./InstancedRenderBase";
 import { InstancedSphereRenderer } from "./InstancedSphereRender";
@@ -34,6 +36,11 @@ export class InstancedRenderManager implements IRenderManager {
     this.instancedRenders.set(
       RenderType.Stroke,
       new InstancedStrokeRender(engine)
+    );
+    this.instancedRenders.set(RenderType.Line, new InstancedLineRender(engine));
+    this.instancedRenders.set(
+      RenderType.Arrow,
+      new InstancedArrowRender(engine)
     );
 
     // data

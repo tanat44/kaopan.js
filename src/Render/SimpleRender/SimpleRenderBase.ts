@@ -3,8 +3,6 @@ import { DEG2RAD } from "three/src/math/MathUtils";
 import { RenderObject, RenderType } from "../../Data/types";
 import { Engine } from "../../Engine/Engine";
 
-export const RENDER_SCALE = 1;
-
 export abstract class SimpleRenderBase {
   geometry: BufferGeometry;
   engine: Engine;
@@ -27,7 +25,7 @@ export abstract class SimpleRenderBase {
 
   applyPosition(object: RenderObject, mesh: Object3D) {
     if (!object.position) return;
-    mesh.position.copy(object.position.multiplyScalar(RENDER_SCALE));
+    mesh.position.copy(object.position);
   }
 
   applyRotation(object: RenderObject, mesh: Object3D) {
@@ -43,6 +41,6 @@ export abstract class SimpleRenderBase {
 
   applyScale(object: RenderObject, mesh: Object3D) {
     if (!object.scale) return;
-    mesh.scale.copy(object.scale.multiplyScalar(RENDER_SCALE));
+    mesh.scale.copy(object.scale);
   }
 }

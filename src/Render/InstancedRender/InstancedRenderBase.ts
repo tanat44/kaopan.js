@@ -13,7 +13,6 @@ import { DEG2RAD } from "three/src/math/MathUtils";
 import { RenderObject, RenderType, name } from "../../Data/types";
 import { Engine } from "../../Engine/Engine";
 
-export const RENDER_SCALE = 1;
 export const MAX_OBJECTS_IN_INSTANCE = 10000;
 export const FIRST_INDEX = 0;
 
@@ -45,13 +44,13 @@ export abstract class InstancedRenderBase {
   render(object: RenderObject, parentMatrix: Matrix4) {
     let instanceRef = this.allObjects.get(object.name);
     if (!instanceRef) {
-      instanceRef = this.createMesh();
+      instanceRef = this.createInstance();
       this.allObjects.set(object.name, instanceRef);
     }
     this.update(object, instanceRef, parentMatrix);
   }
 
-  private createMesh(): InstanceRef {
+  private createInstance(): InstanceRef {
     ++this.lastIndex;
     if (this.lastIndex >= MAX_OBJECTS_IN_INSTANCE) {
       this.addInstancedMesh();
@@ -89,6 +88,7 @@ export abstract class InstancedRenderBase {
     this.applyPosition(object, matrix);
     this.applyRotation(object, matrix);
     this.applyScale(object, matrix);
+    this.applyCustomMatrix(object, instanceRef, matrix);
     instanceRef.mesh.setMatrixAt(instanceRef.index, matrix);
     instanceRef.mesh.instanceMatrix.needsUpdate = true;
 
@@ -99,7 +99,7 @@ export abstract class InstancedRenderBase {
   applyPosition(object: RenderObject, matrix: Matrix4) {
     if (!object.position) return;
     const m = new Matrix4();
-    m.setPosition(object.position.multiplyScalar(RENDER_SCALE));
+    m.setPosition(object.position);
     matrix.multiply(m);
   }
 
@@ -118,7 +118,7 @@ export abstract class InstancedRenderBase {
 
   applyScale(object: RenderObject, matrix: Matrix4) {
     if (!object.scale) return;
-    const s = object.scale.clone().multiplyScalar(RENDER_SCALE);
+    const s = object.scale.clone();
     const m = new Matrix4();
     m.makeScale(s.x, s.y, s.z);
     matrix.multiply(m);
@@ -130,12 +130,22 @@ export abstract class InstancedRenderBase {
     instanceRef.mesh.instanceColor.needsUpdate = true;
   }
 
-  protected addInstancedMesh() {
-    const mesh = new InstancedMesh(
+  applyCustomMatrix(
+    object: RenderObject,
+    instanceRef: InstanceRef,
+    matrix: Matrix4
+  ) {}
+
+  protected createMesh(): InstancedMesh {
+    return new InstancedMesh(
       this.geometry,
       this.material,
       MAX_OBJECTS_IN_INSTANCE
     );
+  }
+
+  protected addInstancedMesh() {
+    const mesh = this.createMesh();
     this.instancedMeshes.push(mesh);
     this.engine.sceneManager.addObject(mesh, true);
   }
